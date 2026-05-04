@@ -137,16 +137,14 @@
   <p>Polish · MIT License · <a href="https://github.com/MajorTomLeee/polish">GitHub</a></p>
 </footer>
 
-<!-- 引入本地 polish.js（开发时） -->
-<script src="../src/polish.js?polish=1"></script>
 <script>
-  // 自动启用 polish（demo 页面默认就开）
-  if (!new URLSearchParams(location.search).has('polish')) {
-    window.__POLISH_FORCE__ = true;
+  // 自动加载 polish.js（带 cache-bust，避免边缘缓存）
+  window.__POLISH_FORCE__ = true;
+  (function() {
     var s = document.createElement('script');
     s.src = '../src/polish.js?b=' + Date.now();
     document.body.appendChild(s);
-  }
+  })();
 </script>
 </body>
 </html>

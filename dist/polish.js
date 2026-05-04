@@ -338,6 +338,7 @@
   const style = document.createElement('style');
   style.textContent = `
     /* ─── reset & root ─── */
+    #polish-root [hidden] { display: none !important; }
     #polish-root, #polish-root * { box-sizing: border-box; }
     #polish-root {
       --polish-accent: #5b5bd6;
