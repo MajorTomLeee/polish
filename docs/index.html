@@ -147,7 +147,7 @@
   .hero-visual img { width: 100%; height: auto; display: block; }
 
   /* sections */
-  section { padding: 112px 0; }
+  section { padding: 144px 0; }
   section h2 {
     font-size: clamp(28px, 3.5vw, 40px); font-weight: 700;
     text-align: center; margin-bottom: 12px; letter-spacing: -0.02em;
@@ -283,8 +283,9 @@
 
   /* footer */
   footer {
-    padding: 48px 0; border-top: 1px solid var(--border);
+    padding: 80px 0 48px; border-top: 1px solid var(--border);
     text-align: center; color: var(--fg-muted); font-size: 13.5px;
+    margin-top: 80px;
   }
   footer a { color: var(--fg-muted); margin: 0 8px; }
   footer a:hover { color: var(--fg); }
@@ -661,14 +662,10 @@ import 'polish';</pre>
     applyI18n(next);
   });
 
-  // ─── bookmarklet drag: ensure bookmark name is "Polish" ───
+  // ─── bookmarklet drag: 让浏览器用默认行为（a.textContent='Polish' + a.href + 当前页 favicon） ───
+  // 不要 setData，否则 Chrome 把它当作普通文本拖拽，丢失 bookmark name 和 URL。
+  // 只拦截 click（用户点了而不是拖拽时弹引导），不阻止 drag 默认行为。
   document.querySelectorAll('a.bookmarklet').forEach(el => {
-    el.addEventListener('dragstart', e => {
-      e.dataTransfer.setData('text/uri-list', el.href);
-      e.dataTransfer.setData('text/plain', el.href);
-      // Firefox-specific: title goes after the URL
-      e.dataTransfer.setData('text/x-moz-url', el.href + '\nPolish');
-    });
     el.addEventListener('click', e => {
       e.preventDefault();
       openInstallModal();
