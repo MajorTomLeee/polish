@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Polish — Vibe coding 的最后一站</title>
+<meta name="description" content="让 AI 生成的页面在浏览器里被任何人改到位。导出 AI-native 改动包给 Cursor / Claude / 研发同事。">
+<meta property="og:title" content="Polish — Vibe coding 的最后一站">
+<meta property="og:description" content="让 AI 生成的页面，在浏览器里被任何人改到位。">
+<meta property="og:url" content="https://polish.bowie.top">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path d='M3 17l4-4M14 6l-7 7M14 6l3-3M14 6l3 3M14 6l-3-3' stroke='%235b5bd6' stroke-width='2' fill='none'/></svg>">
+<style>
+  :root {
+    --accent: #5b5bd6;
+    --accent-hover: #4a4ac9;
+    --fg: #0a0a0a;
+    --fg-muted: #6b7280;
+    --bg: #ffffff;
+    --bg-muted: #f5f5f7;
+    --border: rgba(0,0,0,0.08);
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fg: #f5f5f7;
+      --fg-muted: #98989d;
+      --bg: #0a0a0a;
+      --bg-muted: #161618;
+      --border: rgba(255,255,255,0.10);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+    color: var(--fg); background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { color: var(--accent-hover); }
+
+  /* nav */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    background: color-mix(in oklab, var(--bg) 85%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto; padding: 14px 24px;
+    display: flex; align-items: center; gap: 24px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 16px; color: var(--fg);
+  }
+  .logo svg { color: var(--accent); }
+  .nav a:not(.logo) { color: var(--fg-muted); font-size: 14px; font-weight: 500; }
+  .nav a:not(.logo):hover { color: var(--fg); }
+  .nav .spacer { flex: 1; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* hero */
+  .hero { padding: 96px 0 64px; text-align: center; }
+  .badge {
+    display: inline-block; padding: 4px 12px; border-radius: 999px;
+    background: color-mix(in oklab, var(--accent) 12%, transparent);
+    color: var(--accent); font-size: 12.5px; font-weight: 600;
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 700; letter-spacing: -0.025em;
+    line-height: 1.05; margin-bottom: 20px;
+    background: linear-gradient(180deg, var(--fg) 0%, color-mix(in oklab, var(--fg) 70%, transparent) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero h1 em { color: var(--accent); font-style: normal; -webkit-text-fill-color: var(--accent); }
+  .hero p {
+    font-size: clamp(16px, 1.6vw, 19px); color: var(--fg-muted);
+    max-width: 600px; margin: 0 auto 40px;
+  }
+  .cta-row {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 22px; border-radius: 10px; font-weight: 600; font-size: 15px;
+    border: 0; cursor: pointer; transition: transform .12s, box-shadow .12s, background .12s;
+    text-decoration: none;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); color: #fff; transform: translateY(-1px); }
+  .btn-secondary {
+    background: var(--bg-muted); color: var(--fg); border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: color-mix(in oklab, var(--bg-muted) 60%, var(--accent) 5%); }
+  .btn-bookmarklet {
+    background: linear-gradient(135deg, #5b5bd6 0%, #8b5cf6 100%); color: #fff;
+    box-shadow: 0 8px 24px rgba(91, 91, 214, 0.25);
+  }
+  .btn-bookmarklet:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 12px 32px rgba(91, 91, 214, 0.35); }
+
+  /* hero visual */
+  .hero-visual {
+    margin: 64px auto 0; max-width: 920px;
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.08);
+    aspect-ratio: 16/9;
+    background: linear-gradient(135deg, #f5f5f7 0%, #e5e7eb 100%);
+    position: relative;
+  }
+  @media (prefers-color-scheme: dark) {
+    .hero-visual { background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); }
+  }
+  .hero-visual::before {
+    content: "▶ Demo / GIF";
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--fg-muted); font-size: 18px; font-weight: 500;
+  }
+
+  /* sections */
+  section { padding: 80px 0; }
+  section h2 {
+    font-size: clamp(28px, 3.5vw, 40px); font-weight: 700;
+    text-align: center; margin-bottom: 12px; letter-spacing: -0.02em;
+  }
+  section .lead {
+    text-align: center; color: var(--fg-muted); font-size: 17px;
+    max-width: 600px; margin: 0 auto 56px;
+  }
+
+  /* problem */
+  .problem-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  }
+  .problem-card {
+    padding: 24px; border-radius: var(--radius);
+    background: var(--bg-muted); border: 1px solid var(--border);
+  }
+  .problem-card .icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: color-mix(in oklab, var(--accent) 12%, transparent);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px; font-weight: 700;
+  }
+  .problem-card h3 { font-size: 17px; margin-bottom: 6px; }
+  .problem-card p { color: var(--fg-muted); font-size: 14.5px; }
+
+  /* features */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  }
+  .feature {
+    padding: 28px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--bg);
+    transition: border-color .2s, transform .2s;
+  }
+  .feature:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .feature h3 {
+    font-size: 18px; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .feature h3::before {
+    content: "✓"; color: var(--accent); font-weight: 700;
+  }
+  .feature p { color: var(--fg-muted); font-size: 14.5px; }
+
+  /* install */
+  .install-steps { max-width: 720px; margin: 0 auto; }
+  .step {
+    display: flex; gap: 20px; padding: 24px; border-radius: var(--radius);
+    background: var(--bg-muted); border: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .step-num {
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .step h3 { font-size: 16px; margin-bottom: 6px; }
+  .step p { color: var(--fg-muted); font-size: 14px; margin-bottom: 10px; }
+  .step pre {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; overflow-x: auto; font-size: 12.5px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  .step .bookmarklet-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 8px;
+    background: linear-gradient(135deg, #5b5bd6 0%, #8b5cf6 100%); color: #fff;
+    font-weight: 600; font-size: 14px;
+    box-shadow: 0 4px 12px rgba(91,91,214,.25);
+    cursor: grab;
+  }
+  .step .bookmarklet-link:hover { color: #fff; transform: translateY(-1px); }
+
+  /* workflow */
+  .workflow-arrow {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    align-items: center;
+    background: var(--bg-muted); padding: 28px;
+    border-radius: var(--radius); border: 1px solid var(--border);
+  }
+  .workflow-step {
+    text-align: center; padding: 12px;
+  }
+  .workflow-step .num {
+    display: inline-block; padding: 2px 10px; border-radius: 999px;
+    background: var(--accent); color: #fff; font-size: 12px; font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .workflow-step h4 { font-size: 14px; margin-bottom: 4px; }
+  .workflow-step p { color: var(--fg-muted); font-size: 12.5px; line-height: 1.4; }
+
+  /* footer */
+  footer {
+    padding: 48px 0; border-top: 1px solid var(--border);
+    text-align: center; color: var(--fg-muted); font-size: 13.5px;
+  }
+  footer a { color: var(--fg-muted); margin: 0 8px; }
+  footer a:hover { color: var(--fg); }
+
+  @media (max-width: 720px) {
+    .problem-grid, .features-grid { grid-template-columns: 1fr; }
+    .workflow-arrow { grid-template-columns: 1fr; }
+    .hero { padding: 64px 0 48px; }
+    section { padding: 56px 0; }
+    .nav .nav-link-extras { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner container">
+    <a href="/" class="logo">
+      <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M3 17l4-4M14 6l-7 7M14 6l3-3M14 6l3 3M14 6l-3-3"/>
+      </svg>
+      Polish
+    </a>
+    <span class="spacer"></span>
+    <a href="#features" class="nav-link-extras">特性</a>
+    <a href="#install">安装</a>
+    <a href="/demo/" target="_blank">Demo</a>
+    <a href="https://github.com/MajorTomLeee/polish" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<section class="hero container">
+  <span class="badge">v0.1 · MIT 开源</span>
+  <h1>Vibe coding 的<br><em>最后一站</em></h1>
+  <p>让 AI 生成的页面，在浏览器里被任何人改到位。导出 AI-native 改动包，直接喂给 Cursor / Claude / 研发同事。</p>
+  <div class="cta-row">
+    <a class="btn btn-bookmarklet" id="bookmarklet" draggable="true"
+       href="javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();">
+      📐 拖我到书签栏 → Polish
+    </a>
+    <a class="btn btn-secondary" href="/demo/" target="_blank">在 Demo 页玩一下 →</a>
+  </div>
+  <div class="hero-visual"></div>
+</section>
+
+<section class="container" id="problem">
+  <h2>这不该再发生</h2>
+  <p class="lead">AI 帮你把页面写出来了。它差不多对，但不够对 —— 然后开始扯皮。</p>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="icon">A</div>
+      <h3>设计师 / PM</h3>
+      <p>看到 Vercel preview，觉得标题字号偏小、卡片间距挤、按钮颜色太淡。但<strong>没本地代码、没装环境</strong>，只能截图 + 文字描述。</p>
+    </div>
+    <div class="problem-card">
+      <div class="icon">B</div>
+      <h3>研发 / AI</h3>
+      <p>收到一长串"再左 4px、字大一点、颜色深一档"。AI 反复猜，研发反复改，<strong>第 5 轮还没对</strong>。</p>
+    </div>
+    <div class="problem-card">
+      <div class="icon">C</div>
+      <h3>结果</h3>
+      <p>一个简单的 polish 工序拖一周。Vibe coding 的承诺：<strong>分钟级出页面 → 小时级扯皮，没人开心</strong>。</p>
+    </div>
+  </div>
+</section>
+
+<section class="container" id="solution">
+  <h2>Polish 怎么解</h2>
+  <p class="lead">把任何已部署的页面变成可编辑画布。设计师拖到位 → 一键导出 AI-ready 改动包 → 研发或 AI 直接落代码。</p>
+  <div class="workflow-arrow">
+    <div class="workflow-step">
+      <div class="num">1</div>
+      <h4>打开页面</h4>
+      <p>任何 URL：Vercel preview、Storybook、自己服务器</p>
+    </div>
+    <div class="workflow-step">
+      <div class="num">2</div>
+      <h4>点 bookmarklet</h4>
+      <p>书签一点 → 底部出现 Polish 工具栏</p>
+    </div>
+    <div class="workflow-step">
+      <div class="num">3</div>
+      <h4>拖 / 改 / 备注</h4>
+      <p>真 CSS 编辑：颜色、字号、间距、圆角</p>
+    </div>
+    <div class="workflow-step">
+      <div class="num">4</div>
+      <h4>导出 .md</h4>
+      <p>粘给 Cursor / Claude → 代码改了</p>
+    </div>
+  </div>
+</section>
+
+<section class="container" id="features">
+  <h2>核心特性</h2>
+  <p class="lead">不是 Chrome DevTools 的换皮。每一个特性都为了 design-to-code 的最后一公里。</p>
+  <div class="features-grid">
+    <div class="feature">
+      <h3>真 CSS 编辑</h3>
+      <p>颜色 / 字号 / 字重 / 行高 / 间距 / 圆角 / 阴影 / 透明度。改 padding 让兄弟元素正确 reflow，不是 transform 假象。</p>
+    </div>
+    <div class="feature">
+      <h3>AI-native 导出</h3>
+      <p>导出 markdown 含选择器 + CSS diff + 备注。Cursor / Claude 一眼能消化，不需要研发翻译。</p>
+    </div>
+    <div class="feature">
+      <h3>元素级备注</h3>
+      <p>"这里再透气一点"这种意图也能传递。LLM 读到备注会更理解设计语义。</p>
+    </div>
+    <div class="feature">
+      <h3>分享链接</h3>
+      <p>改动编码到 URL，研发打开同样链接看到所有覆盖。不用聊天框传截图传文字。</p>
+    </div>
+    <div class="feature">
+      <h3>响应式预览</h3>
+      <p>一键切 375 / 768 / 1024 / 1280 / 1440 视口验证多断点。</p>
+    </div>
+    <div class="feature">
+      <h3>Figma 参考图覆盖</h3>
+      <p>上传设计稿半透明叠到当前页面，逐像素对齐。</p>
+    </div>
+    <div class="feature">
+      <h3>Tailwind 感知</h3>
+      <p>检测项目用 Tailwind 时，导出会建议等价 utility class（pl-6 而不是 padding-left:24px）。</p>
+    </div>
+    <div class="feature">
+      <h3>零依赖 · 不污染生产</h3>
+      <p>单文件、无 npm 树，bookmarklet 也能用。没有 ?polish=1 时完全 no-op。</p>
+    </div>
+  </div>
+</section>
+
+<section class="container" id="install">
+  <h2>30 秒开始</h2>
+  <p class="lead">三种方式，挑一种。</p>
+  <div class="install-steps">
+    <div class="step">
+      <div class="step-num">A</div>
+      <div>
+        <h3>Bookmarklet（推荐设计师 / PM）</h3>
+        <p>把下面这颗按钮拖到浏览器书签栏，然后在任何页面点一下书签。</p>
+        <a class="bookmarklet-link" draggable="true"
+           href="javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();">
+          📐 拖我到书签栏 → Polish
+        </a>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">B</div>
+      <div>
+        <h3>一行 script（推荐研发）</h3>
+        <p>在项目 html 末尾加这行，然后 URL 带 <code>?polish=1</code> 启用。</p>
+        <pre>&lt;script src="https://polish.bowie.top/polish.js"&gt;&lt;/script&gt;</pre>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">C</div>
+      <div>
+        <h3>npm（v0.1 即将发布）</h3>
+        <pre>npm install polish
+import 'polish';</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Polish · MIT License · 由 <a href="https://github.com/MajorTomLeee">@MajorTomLeee</a> 出品
+  </p>
+  <p style="margin-top: 8px;">
+    <a href="https://github.com/MajorTomLeee/polish">GitHub</a> ·
+    <a href="/demo/">Demo</a> ·
+    <a href="/polish.js">polish.js</a>
+  </p>
+</footer>
+
+<script>
+  // 给 bookmarklet drag 一些反馈
+  document.querySelectorAll('[draggable="true"]').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/uri-list', el.href);
+      e.dataTransfer.setData('text/plain',   el.href);
+    });
+    el.addEventListener('click', e => {
+      // 阻止直接点击执行（用户可能误点想看效果）
+      if (!confirm('这是 bookmarklet，请把按钮拖到书签栏使用。\n\n点确定立即在本页试用 Polish。')) {
+        e.preventDefault();
+      }
+    });
+  });
+</script>
+</body>
+</html>

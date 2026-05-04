@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Polish Demo · 试着改改这个页面</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font: 16px/1.6 -apple-system, "PingFang SC", system-ui, sans-serif;
+    color: #1a1a1a; background: #fafafa;
+  }
+  .container { max-width: 920px; margin: 0 auto; padding: 80px 32px; }
+
+  /* 故意做一些"AI 写出来差一点"的瑕疵：
+     - 标题字号略小，不够厚重
+     - hero 间距不够呼吸
+     - CTA 颜色偏淡
+     - 卡片阴影太重
+     - 卡片间距挤
+  */
+
+  .hero { padding: 40px 0 60px; }
+  .hero h1 {
+    font-size: 32px;            /* 设计师会觉得偏小 */
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 12px;        /* 间距偏紧 */
+    color: #2a2a2a;
+  }
+  .hero p {
+    font-size: 16px;
+    color: #666;
+    max-width: 600px;
+    margin-bottom: 20px;        /* 偏紧 */
+  }
+  .cta {
+    display: inline-block;
+    padding: 10px 20px;          /* 偏小 */
+    background: #7d7df5;         /* 偏淡 */
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .cta:hover { filter: brightness(0.95); }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;                   /* 偏挤 */
+    margin: 32px 0;
+  }
+  .feature {
+    padding: 20px;               /* 偏小 */
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);  /* 阴影太重 */
+  }
+  .feature h3 {
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: #333;
+  }
+  .feature p {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.5;
+  }
+
+  .testimonial {
+    margin: 60px 0;
+    padding: 28px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #eee;
+  }
+  .testimonial blockquote {
+    font-size: 17px;
+    color: #444;
+    line-height: 1.6;
+    font-style: italic;
+  }
+  .testimonial .author {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #888;
+  }
+
+  footer {
+    padding: 32px 0;
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    border-top: 1px solid #eee;
+  }
+
+  @media (max-width: 720px) {
+    .features { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <section class="hero">
+    <h1>Vibe Coding 的最后一站</h1>
+    <p>让 AI 生成的页面，在浏览器里被任何人改到位。这页就是个"差一点"的 demo —— 试着用 Polish 把它改对。</p>
+    <a href="#" class="cta">开始试用</a>
+  </section>
+
+  <section class="features">
+    <div class="feature">
+      <h3>直接拖拽</h3>
+      <p>任意元素拖位置、改尺寸、改颜色，不需要本地代码。</p>
+    </div>
+    <div class="feature">
+      <h3>真 CSS 编辑</h3>
+      <p>改 padding 让兄弟元素正确 reflow，不是 transform 假象。</p>
+    </div>
+    <div class="feature">
+      <h3>AI-native 导出</h3>
+      <p>导出含选择器 + CSS diff + 备注的 markdown，粘给 Cursor 即改。</p>
+    </div>
+  </section>
+
+  <section class="testimonial">
+    <blockquote>
+      "AI 帮我写好了 90%，但最后那 10% 总是要来回十次还不对。Polish 让设计师直接拖到位，省了一周扯皮。"
+    </blockquote>
+    <div class="author">— 一个被 AI vibe coding 折磨过的产品经理</div>
+  </section>
+</div>
+
+<footer>
+  <p>Polish · MIT License · <a href="https://github.com/MajorTomLeee/polish">GitHub</a></p>
+</footer>
+
+<!-- 引入本地 polish.js（开发时） -->
+<script src="../src/polish.js?polish=1"></script>
+<script>
+  // 自动启用 polish（demo 页面默认就开）
+  if (!new URLSearchParams(location.search).has('polish')) {
+    window.__POLISH_FORCE__ = true;
+    var s = document.createElement('script');
+    s.src = '../src/polish.js?b=' + Date.now();
+    document.body.appendChild(s);
+  }
+</script>
+</body>
+</html>

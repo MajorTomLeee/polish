@@ -1,0 +1,30 @@
+{
+  "name": "polish",
+  "version": "0.1.0",
+  "description": "Vibe coding 的最后一站 — 让 AI 生成的页面，在浏览器里被任何人改到位",
+  "main": "dist/polish.js",
+  "files": ["dist", "src", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "python3 -m http.server 8765 --directory demo"
+  },
+  "keywords": [
+    "vibe-coding",
+    "design-handoff",
+    "visual-editor",
+    "ai-coding",
+    "css",
+    "claude",
+    "cursor"
+  ],
+  "author": "Bowie Lee <@MajorTomLeee>",
+  "license": "MIT",
+  "homepage": "https://polish.bowie.top",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MajorTomLeee/polish.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MajorTomLeee/polish/issues"
+  }
+}
