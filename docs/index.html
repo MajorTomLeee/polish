@@ -111,22 +111,12 @@
     border-radius: 16px; overflow: hidden;
     border: 1px solid var(--border);
     box-shadow: 0 24px 64px rgba(0,0,0,0.08);
-    aspect-ratio: 16/9;
-    background: linear-gradient(135deg, #f5f5f7 0%, #e5e7eb 100%);
-    position: relative;
+    background: var(--bg-muted);
   }
-  @media (prefers-color-scheme: dark) {
-    .hero-visual { background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); }
-  }
-  .hero-visual::before {
-    content: "▶ Demo / GIF";
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--fg-muted); font-size: 18px; font-weight: 500;
-  }
+  .hero-visual img { width: 100%; height: auto; display: block; }
 
   /* sections */
-  section { padding: 80px 0; }
+  section { padding: 112px 0; }
   section h2 {
     font-size: clamp(28px, 3.5vw, 40px); font-weight: 700;
     text-align: center; margin-bottom: 12px; letter-spacing: -0.02em;
@@ -233,7 +223,7 @@
     .problem-grid, .features-grid { grid-template-columns: 1fr; }
     .workflow-arrow { grid-template-columns: 1fr; }
     .hero { padding: 64px 0 48px; }
-    section { padding: 56px 0; }
+    section { padding: 72px 0; }
     .nav .nav-link-extras { display: none; }
   }
 </style>
@@ -267,7 +257,9 @@
     </a>
     <a class="btn btn-secondary" href="/demo/" target="_blank">在 Demo 页玩一下 →</a>
   </div>
-  <div class="hero-visual"></div>
+  <div class="hero-visual">
+    <img src="polish-demo.gif" alt="Polish 演示：拖拽 → 改样式 → 导出 AI-ready markdown" loading="eager">
+  </div>
 </section>
 
 <section class="container" id="problem">
