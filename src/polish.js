@@ -33,6 +33,135 @@
   const enabledByQuery = params.get('polish') === '1' || params.get('edit') === '1';
   if (!enabledByQuery && !window.__POLISH_FORCE__) return;
 
+  // ─── i18n ───
+  const I18N = {
+    en: {
+      logo: 'Polish', mode_pointer: 'Pointer', mode_deep: 'Deep',
+      btn_style: 'Style', btn_note: 'Note', btn_align: 'Align', btn_export: 'Export',
+      tip_about: 'Polish · the last mile of vibe coding',
+      title_mode: 'Mode: pointer (⇧P / ⇧D to switch)',
+      title_style: 'Style (color / font / spacing)', title_note: 'Add a note to this element',
+      title_align: 'Align / distribute',
+      title_undo: 'Undo (Alt+Z)', title_redo: 'Redo (Alt+⇧Z)',
+      title_viewport: 'Viewport size', title_overlay: 'Reference image overlay',
+      title_export: 'Export edits (AI-ready markdown)', title_menu: 'More',
+      pop_style: 'Style', pop_note: 'Note', pop_align: 'Align / distribute', pop_vp: 'Viewport',
+      sec_dom: 'DOM navigation', sec_spacing: 'Spacing (margin / padding · reflows)',
+      label_bg: 'BG', label_color: 'Text', label_border: 'Border',
+      label_radius: 'Radius', label_size: 'Size', label_weight: 'Weight',
+      label_lh: 'Line', label_ls: 'Spacing', label_opacity: 'Opacity', label_shadow: 'Shadow',
+      shadow_default: 'default', shadow_xs: 'xs', shadow_s: 's', shadow_m: 'm', shadow_l: 'l', shadow_xl: 'xl',
+      weight_default: 'default',
+      note_placeholder: 'e.g. needs more breathing room / title not bold enough / want a card with Apple aesthetic',
+      note_hint: 'Esc to close · auto-saved', note_clear: 'Clear',
+      align_left: 'Left', align_center_h: 'Center horiz', align_right: 'Right',
+      align_top: 'Top', align_center_v: 'Center vert', align_bottom: 'Bottom',
+      align_dist_h: 'Distribute horiz (≥3)', align_dist_v: 'Distribute vert (≥3)',
+      nav_parent: '↑ Parent', nav_prev: '← Prev', nav_next: 'Next →', nav_child: 'Child ↓',
+      vp_orig: 'Original',
+      menu_share: 'Copy share link', menu_bookmarklet: 'Copy bookmarklet',
+      menu_reset: 'Reset all edits', menu_hide: 'Hide Polish toolbar', menu_about: 'About Polish ↗',
+      modal_export_title: 'Export — AI-ready markdown',
+      modal_export_tip: 'Paste this whole block to Claude / Cursor / your dev. Selectors, CSS diffs, and notes are included.',
+      copy_all: 'Copy all', download_md: 'Download .md', share_link: 'Copy share link',
+      toast_copied: 'Copied to clipboard', toast_copy_failed: 'Encoding failed',
+      toast_share_copied: 'Share link copied',
+      toast_bookmarklet_copied: 'Bookmarklet copied (paste into bookmark URL)',
+      toast_dist_h: 'Horizontal distribution needs ≥3 elements',
+      toast_dist_v: 'Vertical distribution needs ≥3 elements',
+      toast_vp_reset: 'Viewport restored',
+      toast_vp_set: (v) => `Viewport: ${v}px`,
+      toast_reset: 'All edits cleared',
+      toast_hide_hint: 'Double-click bottom-right to bring back Polish',
+      confirm_reset: 'Reset all edits and notes?',
+      no_edits: '(no edits yet)',
+      session_title: 'Polish editing session',
+      page: 'Page', time: 'Time', viewport: 'Viewport', edits_count: 'Edits',
+      stats_styles: (n) => `${n} style change${n === 1 ? '' : 's'}`,
+      stats_notes: (n) => `${n} note${n === 1 ? '' : 's'}`,
+      task_heading: 'Task',
+      task_intro: 'Apply all edits below to the source code. Each `### selector` is one target element. For each one you have:',
+      task_bullets: '- CSS diff (paste straight into the matching file)\n- Text / note (so you understand the design intent)',
+      task_lib_hint: 'If the project uses a component library or utility classes (Tailwind / shadcn / Material / Ant), translate to the equivalent idiomatic form — do not inline-style.',
+      tailwind_hint: '> Project detected as using Tailwind CSS. Translate CSS diffs to equivalent utility classes (e.g. `padding-left: 24px` → `pl-6`) before applying.',
+      transform_comment: '/* stacked on top of the original transform */',
+      text_change: '**Text change**:',
+      text_before: '- Before:',
+      text_after:  '- After:',
+      note_label: '**Note**:',
+      console_msg: 'Polish enabled · Q/E navigate parent/child · Shift+P/D switch mode · Alt+Z undo · Esc deselect',
+    },
+    zh: {
+      logo: 'Polish', mode_pointer: '指针', mode_deep: '深选',
+      btn_style: '样式', btn_note: '备注', btn_align: '对齐', btn_export: '导出',
+      tip_about: 'Polish · vibe coding 的最后一站',
+      title_mode: '模式：指针（⇧P / ⇧D 切换）',
+      title_style: '样式（颜色 / 字体 / 间距）', title_note: '给当前元素加备注',
+      title_align: '对齐 / 分布',
+      title_undo: '撤销 (Alt+Z)', title_redo: '重做 (Alt+⇧Z)',
+      title_viewport: '视口尺寸', title_overlay: '导入参考图覆盖',
+      title_export: '导出改动（AI-ready markdown）', title_menu: '更多',
+      pop_style: '样式', pop_note: '备注', pop_align: '对齐 / 分布', pop_vp: '视口预览',
+      sec_dom: 'DOM 导航', sec_spacing: '间距（margin / padding · 直接 reflow）',
+      label_bg: '背景', label_color: '文字', label_border: '边框色',
+      label_radius: '圆角', label_size: '字号', label_weight: '字重',
+      label_lh: '行高', label_ls: '字距', label_opacity: '透明', label_shadow: '阴影',
+      shadow_default: '原值', shadow_xs: '微小', shadow_s: '轻', shadow_m: '中', shadow_l: '重', shadow_xl: '很重',
+      weight_default: '原值',
+      note_placeholder: '例如：这里再透气一点 / 标题不够有力量 / 想要 Apple 风格的卡片',
+      note_hint: 'Esc 关闭 · 自动保存', note_clear: '清除',
+      align_left: '左对齐', align_center_h: '水平居中', align_right: '右对齐',
+      align_top: '顶对齐', align_center_v: '垂直居中', align_bottom: '底对齐',
+      align_dist_h: '水平等距（≥3 个）', align_dist_v: '垂直等距（≥3 个）',
+      nav_parent: '↑ 父', nav_prev: '← 兄', nav_next: '弟 →', nav_child: '子 ↓',
+      vp_orig: '原始',
+      menu_share: '复制分享链接', menu_bookmarklet: '复制 bookmarklet',
+      menu_reset: '重置所有改动', menu_hide: '隐藏 Polish 工具栏', menu_about: '关于 Polish ↗',
+      modal_export_title: '导出改动 — AI-ready markdown',
+      modal_export_tip: '把下面整段粘给 Claude / Cursor / 研发同事。已自动包含选择器、CSS diff、备注。',
+      copy_all: '复制全部', download_md: '下载 .md', share_link: '复制分享链接',
+      toast_copied: '已复制到剪贴板', toast_copy_failed: '编码失败',
+      toast_share_copied: '分享链接已复制',
+      toast_bookmarklet_copied: 'Bookmarklet 已复制（粘到书签栏 URL）',
+      toast_dist_h: '水平等距至少需要 3 个',
+      toast_dist_v: '垂直等距至少需要 3 个',
+      toast_vp_reset: '已恢复原始视口',
+      toast_vp_set: (v) => `已切到 ${v}px`,
+      toast_reset: '已重置',
+      toast_hide_hint: '双击页面右下角恢复 Polish',
+      confirm_reset: '确认清除所有改动和备注？',
+      no_edits: '（暂无改动）',
+      session_title: 'Polish 编辑会话',
+      page: '页面', time: '时间', viewport: '视口', edits_count: '改动数',
+      stats_styles: (n) => `${n} 处样式`,
+      stats_notes: (n) => `${n} 条备注`,
+      task_heading: '任务',
+      task_intro: '请把下面所有改动落进源代码。每个 `### selector` 是一个目标元素，下面是该元素的：',
+      task_bullets: '- CSS diff（直接复制到对应文件）\n- 文案 / 备注（理解设计意图）',
+      task_lib_hint: '如果项目使用组件库 / 工具类（Tailwind / shadcn / Material / Ant），请用对应的方式实现等价效果，不要直接 inline style。',
+      tailwind_hint: '> 项目检测到使用 Tailwind CSS。请优先把 CSS diff 翻译成等价的 Tailwind utility class（例如 `padding-left: 24px` → `pl-6`）再落代码。',
+      transform_comment: '/* 在原 transform 之上叠加 */',
+      text_change: '**文案改动**：',
+      text_before: '- 原：',
+      text_after:  '- 改：',
+      note_label: '**备注**：',
+      console_msg: 'Polish 已启用 · Q/E 选父子层 · Shift+P/D 切模式 · Alt+Z 撤销 · Esc 取消',
+    }
+  };
+  // 默认英文。允许 ?polish-lang=zh 或 localStorage 强制。
+  function detectLang() {
+    const force = params.get('polish-lang');
+    if (force === 'en' || force === 'zh') return force;
+    const stored = localStorage.getItem('polish-lang');
+    if (stored === 'en' || stored === 'zh') return stored;
+    return 'en';
+  }
+  let LANG = detectLang();
+  const t = (k, ...args) => {
+    const v = (I18N[LANG] || I18N.en)[k] ?? I18N.en[k] ?? k;
+    return typeof v === 'function' ? v(...args) : v;
+  };
+
   const STORAGE_KEY = 'polish:' + location.host + location.pathname;
   const NOTES_KEY   = 'polish-notes:' + location.host + location.pathname;
   let edits = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -171,77 +300,81 @@
   root.id = 'polish-root';
   root.innerHTML = `
     <div class="polish-bar" role="toolbar" aria-label="Polish">
-      <button class="polish-logo" data-action="about" title="Polish · vibe coding 的最后一站">
+      <button class="polish-logo" data-action="about" title="${t('tip_about')}">
         <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-4M14 6l-7 7M14 6l3-3M14 6l3 3M14 6l-3-3"/></svg>
-        <span>Polish</span>
+        <span>${t('logo')}</span>
       </button>
       <span class="polish-sep"></span>
 
-      <button class="polish-btn polish-mode" data-mode="pointer" title="模式：指针（⇧P 切到深选）">
+      <button class="polish-btn polish-mode" data-mode="pointer" title="${t('title_mode')}">
         <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><path d="M5 3l9 5-4 1-2 4z"/></svg>
-        <span class="label">指针</span>
+        <span class="label">${t('mode_pointer')}</span>
       </button>
 
-      <button class="polish-btn" data-action="style" title="样式（颜色/字体/间距）" disabled>
+      <button class="polish-btn" data-action="style" title="${t('title_style')}" disabled>
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="6.5"/><circle cx="7" cy="8" r="1" fill="currentColor"/><circle cx="13" cy="8" r="1" fill="currentColor"/><circle cx="13" cy="12" r="1" fill="currentColor"/></svg>
-        <span class="label">样式</span>
+        <span class="label">${t('btn_style')}</span>
       </button>
 
-      <button class="polish-btn" data-action="note" title="给当前元素加备注" disabled>
+      <button class="polish-btn" data-action="note" title="${t('title_note')}" disabled>
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h12v9l-3 3H4z"/><path d="M13 16v-3h3"/></svg>
-        <span class="label">备注</span>
+        <span class="label">${t('btn_note')}</span>
       </button>
 
-      <button class="polish-btn" data-action="align" title="对齐 / 分布" disabled>
+      <button class="polish-btn" data-action="align" title="${t('title_align')}" disabled>
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 4h14M3 10h10M3 16h14"/></svg>
-        <span class="label">对齐</span>
+        <span class="label">${t('btn_align')}</span>
       </button>
 
       <span class="polish-sep"></span>
 
-      <button class="polish-btn polish-icon" data-action="undo" title="撤销 (Alt+Z)">
+      <button class="polish-btn polish-icon" data-action="undo" title="${t('title_undo')}">
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 4L3 8l4 4"/><path d="M3 8h9a4 4 0 010 8H8"/></svg>
       </button>
-      <button class="polish-btn polish-icon" data-action="redo" title="重做 (Alt+⇧Z)">
+      <button class="polish-btn polish-icon" data-action="redo" title="${t('title_redo')}">
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 4l4 4-4 4"/><path d="M17 8H8a4 4 0 000 8h4"/></svg>
       </button>
 
-      <button class="polish-btn polish-icon" data-action="viewport" title="视口尺寸">
+      <button class="polish-btn polish-icon" data-action="viewport" title="${t('title_viewport')}">
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="14" height="10" rx="1"/><path d="M7 17h6"/></svg>
       </button>
 
-      <button class="polish-btn polish-icon" data-action="overlay" title="导入参考图覆盖">
+      <button class="polish-btn polish-icon" data-action="overlay" title="${t('title_overlay')}">
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="14" height="14" rx="1"/><path d="M3 13l4-4 4 4 3-3 3 3"/></svg>
       </button>
 
       <span class="polish-sep"></span>
 
-      <button class="polish-btn polish-primary" data-action="export" title="导出改动 (AI-ready markdown)">
+      <button class="polish-btn polish-primary" data-action="export" title="${t('title_export')}">
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3v10M6 9l4 4 4-4M3 17h14"/></svg>
-        <span class="label">导出</span>
+        <span class="label">${t('btn_export')}</span>
         <span class="polish-count" hidden>0</span>
       </button>
 
-      <button class="polish-btn polish-icon polish-menu" data-action="menu" title="更多">
+      <button class="polish-btn polish-icon polish-menu" data-action="menu" title="${t('title_menu')}">
         <svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor"><circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/></svg>
+      </button>
+
+      <button class="polish-btn polish-icon polish-lang-toggle" data-action="lang" title="Language">
+        <span class="label">${LANG === 'zh' ? '中' : 'EN'}</span>
       </button>
     </div>
 
     <div class="polish-popover polish-style-popover" hidden>
-      <div class="polish-pop-head">样式 <span class="polish-current-sel"></span></div>
+      <div class="polish-pop-head">${t('pop_style')} <span class="polish-current-sel"></span></div>
       <div class="polish-style-grid">
-        <label>背景<input type="color" data-prop="background-color"></label>
-        <label>文字<input type="color" data-prop="color"></label>
-        <label>边框色<input type="color" data-prop="border-color"></label>
-        <label>圆角<input type="number" min="0" max="200" data-prop="border-radius" data-unit="px" placeholder="px"></label>
-        <label>字号<input type="number" min="1" max="200" data-prop="font-size" data-unit="px" placeholder="px"></label>
-        <label>字重<select data-prop="font-weight"><option value="">原值</option><option>300</option><option>400</option><option>500</option><option>600</option><option>700</option><option>800</option></select></label>
-        <label>行高<input type="number" step="0.05" min="0.5" max="5" data-prop="line-height" data-unit="" placeholder="无单位"></label>
-        <label>字距<input type="number" step="0.5" data-prop="letter-spacing" data-unit="px" placeholder="px"></label>
-        <label>透明<input type="range" min="0" max="100" data-prop="opacity" data-unit="%"></label>
-        <label>阴影<select data-prop="box-shadow"><option value="">原值</option><option value="0 1px 2px rgba(0,0,0,.05)">微小</option><option value="0 2px 8px rgba(0,0,0,.08)">轻</option><option value="0 4px 16px rgba(0,0,0,.12)">中</option><option value="0 8px 32px rgba(0,0,0,.18)">重</option><option value="0 16px 48px rgba(0,0,0,.24)">很重</option></select></label>
+        <label>${t('label_bg')}<input type="color" data-prop="background-color"></label>
+        <label>${t('label_color')}<input type="color" data-prop="color"></label>
+        <label>${t('label_border')}<input type="color" data-prop="border-color"></label>
+        <label>${t('label_radius')}<input type="number" min="0" max="200" data-prop="border-radius" data-unit="px" placeholder="px"></label>
+        <label>${t('label_size')}<input type="number" min="1" max="200" data-prop="font-size" data-unit="px" placeholder="px"></label>
+        <label>${t('label_weight')}<select data-prop="font-weight"><option value="">${t('weight_default')}</option><option>300</option><option>400</option><option>500</option><option>600</option><option>700</option><option>800</option></select></label>
+        <label>${t('label_lh')}<input type="number" step="0.05" min="0.5" max="5" data-prop="line-height" data-unit="" placeholder="—"></label>
+        <label>${t('label_ls')}<input type="number" step="0.5" data-prop="letter-spacing" data-unit="px" placeholder="px"></label>
+        <label>${t('label_opacity')}<input type="range" min="0" max="100" data-prop="opacity" data-unit="%"></label>
+        <label>${t('label_shadow')}<select data-prop="box-shadow"><option value="">${t('shadow_default')}</option><option value="0 1px 2px rgba(0,0,0,.05)">${t('shadow_xs')}</option><option value="0 2px 8px rgba(0,0,0,.08)">${t('shadow_s')}</option><option value="0 4px 16px rgba(0,0,0,.12)">${t('shadow_m')}</option><option value="0 8px 32px rgba(0,0,0,.18)">${t('shadow_l')}</option><option value="0 16px 48px rgba(0,0,0,.24)">${t('shadow_xl')}</option></select></label>
       </div>
-      <div class="polish-pop-section">间距（margin / padding · 直接 reflow）</div>
+      <div class="polish-pop-section">${t('sec_spacing')}</div>
       <div class="polish-spacing">
         <div class="polish-spacing-grid">
           <input type="number" data-prop="margin-top" data-unit="px" placeholder="m-t">
@@ -257,39 +390,39 @@
     </div>
 
     <div class="polish-popover polish-note-popover" hidden>
-      <div class="polish-pop-head">备注 <span class="polish-current-sel"></span></div>
-      <textarea class="polish-note-input" placeholder="例如：这里再透气一点 / 标题不够有力量 / 想要 Apple 风格的卡片"></textarea>
+      <div class="polish-pop-head">${t('pop_note')} <span class="polish-current-sel"></span></div>
+      <textarea class="polish-note-input" placeholder="${t('note_placeholder')}"></textarea>
       <div class="polish-pop-foot">
-        <span class="polish-hint">Esc 关闭 · 自动保存</span>
-        <button class="polish-btn-mini polish-note-clear">清除</button>
+        <span class="polish-hint">${t('note_hint')}</span>
+        <button class="polish-btn-mini polish-note-clear">${t('note_clear')}</button>
       </div>
     </div>
 
     <div class="polish-popover polish-align-popover" hidden>
-      <div class="polish-pop-head">对齐 / 分布</div>
+      <div class="polish-pop-head">${t('pop_align')}</div>
       <div class="polish-align-grid">
-        <button data-align="left"     title="左对齐">⫷</button>
-        <button data-align="center-h" title="水平居中">↔</button>
-        <button data-align="right"    title="右对齐">⫸</button>
-        <button data-align="top"      title="顶对齐">⊤</button>
-        <button data-align="center-v" title="垂直居中">↕</button>
-        <button data-align="bottom"   title="底对齐">⊥</button>
-        <button data-align="dist-h"   title="水平等距">‖→</button>
-        <button data-align="dist-v"   title="垂直等距">‖↓</button>
+        <button data-align="left"     title="${t('align_left')}">⫷</button>
+        <button data-align="center-h" title="${t('align_center_h')}">↔</button>
+        <button data-align="right"    title="${t('align_right')}">⫸</button>
+        <button data-align="top"      title="${t('align_top')}">⊤</button>
+        <button data-align="center-v" title="${t('align_center_v')}">↕</button>
+        <button data-align="bottom"   title="${t('align_bottom')}">⊥</button>
+        <button data-align="dist-h"   title="${t('align_dist_h')}">‖→</button>
+        <button data-align="dist-v"   title="${t('align_dist_v')}">‖↓</button>
       </div>
-      <div class="polish-pop-section">DOM 导航</div>
+      <div class="polish-pop-section">${t('sec_dom')}</div>
       <div class="polish-nav-grid">
-        <button data-nav="parent">↑ 父</button>
-        <button data-nav="prev">← 兄</button>
-        <button data-nav="next">弟 →</button>
-        <button data-nav="child">子 ↓</button>
+        <button data-nav="parent">${t('nav_parent')}</button>
+        <button data-nav="prev">${t('nav_prev')}</button>
+        <button data-nav="next">${t('nav_next')}</button>
+        <button data-nav="child">${t('nav_child')}</button>
       </div>
     </div>
 
     <div class="polish-popover polish-vp-popover" hidden>
-      <div class="polish-pop-head">视口预览</div>
+      <div class="polish-pop-head">${t('pop_vp')}</div>
       <div class="polish-vp-grid">
-        <button data-vp="0">原始</button>
+        <button data-vp="0">${t('vp_orig')}</button>
         <button data-vp="375">375 · iPhone</button>
         <button data-vp="768">768 · iPad</button>
         <button data-vp="1024">1024</button>
@@ -299,25 +432,25 @@
     </div>
 
     <div class="polish-popover polish-menu-popover" hidden>
-      <button class="polish-menu-item" data-action="copy-share">复制分享链接</button>
-      <button class="polish-menu-item" data-action="bookmarklet">复制 bookmarklet</button>
-      <button class="polish-menu-item" data-action="reset">重置所有改动</button>
-      <button class="polish-menu-item" data-action="hide">隐藏 Polish 工具栏</button>
-      <a class="polish-menu-item" href="https://polish.bowie.top" target="_blank" rel="noopener">关于 Polish ↗</a>
+      <button class="polish-menu-item" data-action="copy-share">${t('menu_share')}</button>
+      <button class="polish-menu-item" data-action="bookmarklet">${t('menu_bookmarklet')}</button>
+      <button class="polish-menu-item" data-action="reset">${t('menu_reset')}</button>
+      <button class="polish-menu-item" data-action="hide">${t('menu_hide')}</button>
+      <a class="polish-menu-item" href="https://polish.bowie.top" target="_blank" rel="noopener">${t('menu_about')}</a>
     </div>
 
     <div class="polish-export-modal" hidden>
       <div class="polish-modal-card">
         <div class="polish-modal-head">
-          <strong>导出改动 — AI-ready markdown</strong>
+          <strong>${t('modal_export_title')}</strong>
           <button class="polish-btn-mini polish-modal-close">×</button>
         </div>
-        <div class="polish-modal-tip">把下面整段粘给 Claude / Cursor / 研发同事。已自动包含选择器、CSS diff、备注。</div>
+        <div class="polish-modal-tip">${t('modal_export_tip')}</div>
         <textarea class="polish-export-text" readonly></textarea>
         <div class="polish-modal-actions">
-          <button class="polish-btn-primary polish-copy-export">复制全部</button>
-          <button class="polish-btn-secondary polish-download-export">下载 .md</button>
-          <button class="polish-btn-secondary polish-share-export">复制分享链接</button>
+          <button class="polish-btn-primary polish-copy-export">${t('copy_all')}</button>
+          <button class="polish-btn-secondary polish-download-export">${t('download_md')}</button>
+          <button class="polish-btn-secondary polish-share-export">${t('share_link')}</button>
         </div>
       </div>
     </div>
@@ -635,6 +768,15 @@
     .polish-h-n,  .polish-h-s  { cursor: ns-resize;  }
     .polish-h-e,  .polish-h-w  { cursor: ew-resize;  }
 
+    /* ─── 对齐参考线 ─── */
+    .polish-guide {
+      position: fixed; pointer-events: none;
+      background: var(--polish-accent);
+      z-index: 2147483645;
+    }
+    .polish-guide-h { height: 1px; box-shadow: 0 0 0 0.5px var(--polish-accent); }
+    .polish-guide-v { width: 1px; box-shadow: 0 0 0 0.5px var(--polish-accent); }
+
     body.polish-active * { cursor: crosshair !important; pointer-events: auto !important; }
     body.polish-active { cursor: crosshair !important; }
     #polish-root, #polish-root *,
@@ -711,7 +853,7 @@
   function setMode(m) {
     mode = m;
     $modeBtn.dataset.mode = m;
-    $modeBtn.querySelector('.label').textContent = m === 'pointer' ? '指针' : '深选';
+    $modeBtn.querySelector('.label').textContent = m === 'pointer' ? t('mode_pointer') : t('mode_deep');
   }
 
   function closePopovers(except) {
@@ -742,6 +884,89 @@
     document.body.appendChild(h);
     return h;
   });
+
+  // 对齐参考线（拖动时显示）
+  const guideLayer = document.createElement('div');
+  guideLayer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483645;';
+  document.body.appendChild(guideLayer);
+  function clearGuides() { guideLayer.innerHTML = ''; }
+  function addGuide(type, pos, span) {
+    const g = document.createElement('div');
+    g.className = 'polish-guide polish-guide-' + type;
+    if (type === 'v') {
+      g.style.left = pos + 'px';
+      g.style.top  = span[0] + 'px';
+      g.style.height = (span[1] - span[0]) + 'px';
+    } else {
+      g.style.top  = pos + 'px';
+      g.style.left = span[0] + 'px';
+      g.style.width  = (span[1] - span[0]) + 'px';
+    }
+    guideLayer.appendChild(g);
+  }
+
+  // drag 开始时缓存候选元素的 rect，避免每次 mousemove 重算
+  let snapCandidates = [];
+  function buildSnapCandidates(targetEls) {
+    const set = new Set(targetEls);
+    const ignore = (el) => set.has(el) || root.contains(el) ||
+      el === guideLayer || el === hoverBox || el === hoverLabel ||
+      handles.includes(el);
+    snapCandidates = [];
+    document.querySelectorAll('body *').forEach(el => {
+      if (ignore(el)) return;
+      if (!isVisible(el)) return;
+      const r = el.getBoundingClientRect();
+      if (r.width < 4 || r.height < 4) return;
+      snapCandidates.push(r);
+    });
+  }
+
+  // 给定当前元素 rect，找到 snap 偏移和需画的参考线
+  // 返回 { snapDx, snapDy, guides: [{type, pos, span}] }
+  const SNAP_THRESHOLD = 5;
+  function computeSnap(r) {
+    let bestDx = 0, bestDxAbs = SNAP_THRESHOLD + 1;
+    let bestDy = 0, bestDyAbs = SNAP_THRESHOLD + 1;
+    const guides = [];
+
+    const myV = [r.left, r.left + r.width / 2, r.right];
+    const myH = [r.top,  r.top  + r.height / 2, r.bottom];
+
+    for (const c of snapCandidates) {
+      const cV = [c.left, c.left + c.width / 2, c.right];
+      const cH = [c.top,  c.top  + c.height / 2, c.bottom];
+      // 垂直对齐：x 维度匹配
+      for (const m of myV) {
+        for (const t of cV) {
+          const d = t - m;
+          if (Math.abs(d) <= SNAP_THRESHOLD) {
+            if (Math.abs(d) < bestDxAbs) { bestDx = d; bestDxAbs = Math.abs(d); }
+            guides.push({
+              type: 'v', pos: t,
+              span: [Math.min(r.top, c.top) - 8, Math.max(r.bottom, c.bottom) + 8]
+            });
+          }
+        }
+      }
+      // 水平对齐：y 维度匹配
+      for (const m of myH) {
+        for (const t of cH) {
+          const d = t - m;
+          if (Math.abs(d) <= SNAP_THRESHOLD) {
+            if (Math.abs(d) < bestDyAbs) { bestDy = d; bestDyAbs = Math.abs(d); }
+            guides.push({
+              type: 'h', pos: t,
+              span: [Math.min(r.left, c.left) - 8, Math.max(r.right, c.right) + 8]
+            });
+          }
+        }
+      }
+    }
+    return { snapDx: bestDxAbs <= SNAP_THRESHOLD ? bestDx : 0,
+             snapDy: bestDyAbs <= SNAP_THRESHOLD ? bestDy : 0,
+             guides };
+  }
 
   // ─────────────────────────────────────────────
   // edits 数据模型
@@ -1061,7 +1286,7 @@
       'center-h': () => { const cx = rects.reduce((s, o) => s + (o.r.left + o.r.width/2), 0) / rects.length; rects.forEach(o => shiftElement(o.el, cx - (o.r.left + o.r.width/2), 0)); },
       'center-v': () => { const cy = rects.reduce((s, o) => s + (o.r.top  + o.r.height/2), 0) / rects.length; rects.forEach(o => shiftElement(o.el, 0, cy - (o.r.top + o.r.height/2))); },
       'dist-h':  () => {
-        if (rects.length < 3) { toast('水平等距至少需要 3 个'); return; }
+        if (rects.length < 3) { toast(t('toast_dist_h')); return; }
         const sorted = rects.slice().sort((a,b) => a.r.left - b.r.left);
         const totalW = sorted.reduce((s,o) => s + o.r.width, 0);
         const span = sorted[sorted.length-1].r.right - sorted[0].r.left;
@@ -1070,7 +1295,7 @@
         sorted.forEach(o => { shiftElement(o.el, cur - o.r.left, 0); cur += o.r.width + gap; });
       },
       'dist-v': () => {
-        if (rects.length < 3) { toast('垂直等距至少需要 3 个'); return; }
+        if (rects.length < 3) { toast(t('toast_dist_v')); return; }
         const sorted = rects.slice().sort((a,b) => a.r.top - b.r.top);
         const totalH = sorted.reduce((s,o) => s + o.r.height, 0);
         const span = sorted[sorted.length-1].r.bottom - sorted[0].r.top;
@@ -1107,7 +1332,7 @@
       document.body.style.setProperty('--polish-vp-width', v + 'px');
     }
     closePopovers();
-    toast(+v === 0 ? '已恢复原始视口' : `已切到 ${v}px`);
+    toast(+v === 0 ? t('toast_vp_reset') : t('toast_vp_set', v));
   });
 
   // ─────────────────────────────────────────────
@@ -1161,7 +1386,14 @@
     else if (action === 'redo')    redoFn();
     else if (action === 'overlay') openOverlay();
     else if (action === 'export')  openExportModal();
+    else if (action === 'lang')    toggleLang();
   });
+
+  function toggleLang() {
+    LANG = LANG === 'zh' ? 'en' : 'zh';
+    localStorage.setItem('polish-lang', LANG);
+    location.reload();
+  }
 
   popovers.menu.addEventListener('click', e => {
     const btn = e.target.closest('[data-action]');
@@ -1173,12 +1405,12 @@
     else if (a === 'bookmarklet') copyBookmarklet();
     else if (a === 'hide') {
       $bar.classList.add('hidden');
-      toast('双击页面右下角恢复 Polish');
+      toast(t('toast_hide_hint'));
     }
   });
 
   function resetAll() {
-    if (!confirm('确认清除所有改动和备注？')) return;
+    if (!confirm(t('confirm_reset'))) return;
     Object.entries(edits).forEach(([sel, e]) => {
       const el = document.querySelector(sel);
       if (el) {
@@ -1191,7 +1423,7 @@
     edits = {}; notes = {};
     document.querySelectorAll('.polish-noted').forEach(n => n.classList.remove('polish-noted'));
     save(); updateHandles(); updateBadge(); snapshot();
-    toast('已重置');
+    toast(t('toast_reset'));
   }
 
   // ─────────────────────────────────────────────
@@ -1212,7 +1444,7 @@
   // ─────────────────────────────────────────────
   function buildExportMarkdown() {
     const total = Object.keys(edits).length + Object.keys(notes).length;
-    if (total === 0) return '（暂无改动）';
+    if (total === 0) return t('no_edits');
 
     const allSelectors = new Set([...Object.keys(edits), ...Object.keys(notes)]);
     const items = [...allSelectors].map(sel => {
@@ -1222,8 +1454,8 @@
       if (e) {
         const css = [];
         if (e.dx || e.dy || (e.scale && e.scale !== 1)) {
-          const t = `translate(${e.dx||0}px, ${e.dy||0}px)${e.scale && e.scale !== 1 ? ` scale(${e.scale.toFixed(3)})` : ''}`;
-          css.push(`  transform: ${t};  /* 在原 transform 之上叠加 */`);
+          const tx = `translate(${e.dx||0}px, ${e.dy||0}px)${e.scale && e.scale !== 1 ? ` scale(${e.scale.toFixed(3)})` : ''}`;
+          css.push(`  transform: ${tx};  ${t('transform_comment')}`);
         }
         if (e.width != null) {
           css.push(`  width: ${smartSize(e.width, e.original?.widthCSS, e.original?.parentW, window.innerWidth)};`);
@@ -1242,36 +1474,33 @@
           lines.push('```');
         }
         if (e.text != null && e.text !== e.original?.text) {
-          lines.push('**文案改动**：');
-          lines.push(`- 原：${JSON.stringify(e.original?.text || '')}`);
-          lines.push(`- 改：${JSON.stringify(e.text)}`);
+          lines.push(t('text_change'));
+          lines.push(`${t('text_before')} ${JSON.stringify(e.original?.text || '')}`);
+          lines.push(`${t('text_after')} ${JSON.stringify(e.text)}`);
         }
       }
       if (note) {
-        lines.push(`**备注**：${note}`);
+        lines.push(`${t('note_label')} ${note}`);
       }
       return lines.length ? `### \`${sel}\`\n\n${lines.join('\n')}` : '';
     }).filter(Boolean);
 
-    const tailwindHint = isTailwind
-      ? '\n> 项目检测到使用 Tailwind CSS。请优先把 CSS diff 翻译成等价的 Tailwind utility class（例如 `padding-left: 24px` → `pl-6`）再落代码。\n'
-      : '';
+    const tailwindHint = isTailwind ? `\n${t('tailwind_hint')}\n` : '';
 
     return [
-      `# Polish 编辑会话`,
+      `# ${t('session_title')}`,
       ``,
-      `**页面**：${location.href.replace(/\?polish=1.*$/, '')}`,
-      `**时间**：${new Date().toLocaleString()}`,
-      `**视口**：${window.innerWidth} × ${window.innerHeight}`,
-      `**改动数**：${Object.keys(edits).length} 处样式 / ${Object.keys(notes).length} 条备注`,
+      `**${t('page')}**: ${location.href.replace(/\?polish=1.*$/, '')}`,
+      `**${t('time')}**: ${new Date().toLocaleString()}`,
+      `**${t('viewport')}**: ${window.innerWidth} × ${window.innerHeight}`,
+      `**${t('edits_count')}**: ${t('stats_styles', Object.keys(edits).length)} / ${t('stats_notes', Object.keys(notes).length)}`,
       tailwindHint,
-      `## 任务`,
+      `## ${t('task_heading')}`,
       ``,
-      `请把下面所有改动落进源代码。每个 \`### selector\` 是一个目标元素，下面是该元素的：`,
-      `- CSS diff（直接复制到对应文件）`,
-      `- 文案 / 备注（理解设计意图）`,
+      t('task_intro'),
+      t('task_bullets'),
       ``,
-      `如果项目使用组件库 / 工具类（Tailwind / shadcn / Material / Ant），请用对应的方式实现等价效果，不要直接 inline style。`,
+      t('task_lib_hint'),
       ``,
       `---`,
       ``,
@@ -1287,8 +1516,8 @@
   $exportModal.querySelector('.polish-modal-close').onclick = () => $exportModal.hidden = true;
   $exportModal.addEventListener('click', e => { if (e.target === $exportModal) $exportModal.hidden = true; });
   root.querySelector('.polish-copy-export').onclick = async () => {
-    try { await navigator.clipboard.writeText($exportText.value); toast('已复制到剪贴板'); }
-    catch { $exportText.select(); document.execCommand('copy'); toast('已复制'); }
+    try { await navigator.clipboard.writeText($exportText.value); toast(t('toast_copied')); }
+    catch { $exportText.select(); document.execCommand('copy'); toast(t('toast_copied')); }
   };
   root.querySelector('.polish-download-export').onclick = () => {
     const blob = new Blob([$exportText.value], { type: 'text/markdown' });
@@ -1307,14 +1536,14 @@
       u.searchParams.set('polish', '1');
       u.searchParams.set('polish-share', encoded);
       navigator.clipboard.writeText(u.toString());
-      toast('分享链接已复制');
-    } catch (e) { toast('编码失败'); }
+      toast(t('toast_share_copied'));
+    } catch (e) { toast(t('toast_copy_failed')); }
   }
 
   function copyBookmarklet() {
-    const code = `javascript:(function(){if(window.__POLISH__){alert('Polish 已激活');return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();`;
+    const code = `javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();`;
     navigator.clipboard.writeText(code);
-    toast('Bookmarklet 已复制（粘到书签栏 URL）');
+    toast(t('toast_bookmarklet_copied'));
   }
 
   // ─────────────────────────────────────────────
@@ -1339,10 +1568,25 @@
     if (drag) {
       const ddx = e.clientX - drag.startX;
       const ddy = e.clientY - drag.startY;
+      // 先按裸 dx/dy 应用一次
       for (const t of drag.targets) {
         const o = edits[t.sel];
         o.dx = t.origDx + ddx; o.dy = t.origDy + ddy;
         applyEdit(t.el, o);
+      }
+      // 单选时计算 snap：根据 primary 元素当前位置算偏移，整组吸附
+      clearGuides();
+      if (drag.targets.length === 1 && !e.altKey) {
+        const r = drag.targets[0].el.getBoundingClientRect();
+        const { snapDx, snapDy, guides } = computeSnap(r);
+        if (snapDx !== 0 || snapDy !== 0) {
+          for (const t of drag.targets) {
+            const o = edits[t.sel];
+            o.dx += snapDx; o.dy += snapDy;
+            applyEdit(t.el, o);
+          }
+        }
+        guides.forEach(g => addGuide(g.type, g.pos, g.span));
       }
       return;
     }
@@ -1400,6 +1644,7 @@
       startX: e.clientX, startY: e.clientY,
       origDx: edits[selectorFor(el)].dx || 0, origDy: edits[selectorFor(el)].dy || 0
     };
+    buildSnapCandidates(dragTargets.map(t => t.el));
     document.body.classList.add('polish-dragging');
     hoverBox.style.display = 'none'; hoverLabel.style.display = 'none';
   }, true);
@@ -1412,6 +1657,7 @@
     }
     if (!drag) return;
     document.body.classList.remove('polish-dragging');
+    clearGuides();
     for (const t of drag.targets) {
       if (entryIsEmpty(edits[t.sel])) delete edits[t.sel];
     }
@@ -1494,6 +1740,10 @@
     if (e.altKey &&  e.shiftKey && (e.key === 'z' || e.key === 'Z')) { redoFn(); e.preventDefault(); return; }
     if (e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'P' || e.key === 'p')) { setMode('pointer'); e.preventDefault(); }
     else if (e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'D' || e.key === 'd')) { setMode('deep'); e.preventDefault(); }
+    else if (!e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'q' || e.key === 'Q')) { navAction('parent'); e.preventDefault(); }
+    else if (!e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'e' || e.key === 'E')) { navAction('child');  e.preventDefault(); }
+    else if (!e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'a' || e.key === 'A')) { navAction('prev');   e.preventDefault(); }
+    else if (!e.shiftKey && !e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 's' || e.key === 'S')) { navAction('next');   e.preventDefault(); }
     else if (e.key === 'Escape') {
       if (Object.values(popovers).some(p => !p.hidden) || !$exportModal.hidden) {
         closePopovers(); $exportModal.hidden = true;
@@ -1516,5 +1766,5 @@
   applyAllEdits();
   setMode('pointer');
   updateBadge();
-  console.log('%c[Polish] 已启用', 'color:#5b5bd6;font-weight:600', '· Shift+P/D 切模式 · Alt+Z 撤销 · Esc 取消');
+  console.log('%c[Polish]', 'color:#5b5bd6;font-weight:600', t('console_msg'));
 })();

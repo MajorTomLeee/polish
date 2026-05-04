@@ -12,6 +12,10 @@ mkdirSync(resolve(ROOT, 'dist'), { recursive: true });
 copyFileSync(resolve(ROOT, 'src/polish.js'), resolve(ROOT, 'dist/polish.js'));
 console.log('✓ dist/polish.js');
 
+// 1b. dist/favicon.svg
+copyFileSync(resolve(ROOT, 'docs/favicon.svg'), resolve(ROOT, 'dist/favicon.svg'));
+console.log('✓ dist/favicon.svg');
+
 // 2. bookmarklet 代码（从 polish.bowie.top 加载）
 const BOOKMARKLET = `javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();`;
 
