@@ -65,6 +65,10 @@
       btn_preview: 'Preview', btn_edit: 'Edit',
       title_preview: 'Preview mode — turn off editing temporarily',
       title_edit: 'Back to editing',
+      btn_edit_text: 'Edit text',
+      title_edit_text: 'Edit the text content of the selected element',
+      toast_edit_text_pick: 'Select an element first',
+      toast_edit_text_not_leaf: 'This element has child elements — pick a text node (h1, p, button, etc.)',
       toast_preview_on: 'Preview mode — click again to edit',
       toast_preview_off: 'Editing again',
       confirm_baseline: 'Clear all local edits and notes WITHOUT undoing them on the page? Use this after you have merged changes to source code, so Polish starts from the new baseline.',
@@ -130,6 +134,10 @@
       btn_preview: '预览', btn_edit: '编辑',
       title_preview: '预览模式 — 暂时关闭编辑',
       title_edit: '回到编辑',
+      btn_edit_text: '改文字',
+      title_edit_text: '编辑当前选中元素的文字内容',
+      toast_edit_text_pick: '请先选中一个元素',
+      toast_edit_text_not_leaf: '这个元素含子元素 — 请选具体的文字节点（h1, p, button 等）',
       toast_preview_on: '已切到预览，再点回到编辑',
       toast_preview_off: '回到编辑',
       confirm_baseline: '清空本地所有编辑和备注，但不还原页面 DOM？用于：你已经把改动合入源码后，让 Polish 从新基线重新开始。',
@@ -365,6 +373,11 @@
       <button class="polish-btn" data-action="style" title="${t('title_style')}" disabled>
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="10" r="6.5"/><circle cx="7" cy="8" r="1" fill="currentColor"/><circle cx="13" cy="8" r="1" fill="currentColor"/><circle cx="13" cy="12" r="1" fill="currentColor"/></svg>
         <span class="label">${t('btn_style')}</span>
+      </button>
+
+      <button class="polish-btn" data-action="edit-text" title="${t('title_edit_text')}" disabled>
+        <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 5h10M10 5v11M7 16h6"/></svg>
+        <span class="label">${t('btn_edit_text')}</span>
       </button>
 
       <button class="polish-btn" data-action="note" title="${t('title_note')}" disabled>
@@ -1255,7 +1268,7 @@
 
   function refreshSelectionUI() {
     const has = !!selected;
-    ['style','note','align'].forEach(k => {
+    ['style','note','align','edit-text'].forEach(k => {
       const btn = root.querySelector(`[data-action="${k}"]`);
       if (btn) btn.disabled = !has;
     });
@@ -1512,6 +1525,7 @@
     if (action === 'about') {
       window.open('https://polish.bowie.top', '_blank');
     } else if (action === 'style')   togglePopover('style', btn);
+    else if (action === 'edit-text') startTextEdit(selected);
     else if (action === 'note')    togglePopover('note', btn);
     else if (action === 'align')   togglePopover('align', btn);
     else if (action === 'viewport') togglePopover('viewport', btn);
@@ -1835,6 +1849,34 @@
     return [...el.children].every(c => /^(BR|SPAN|EM|STRONG|I|B|U|SMALL)$/.test(c.tagName));
   }
 
+  // 把"进入文字编辑"提取为独立动作，必须显式触发（工具栏按钮）
+  // 默认双击只用于"钻入子元素 / 右下角恢复 toolbar"，不再误触改文字
+  function startTextEdit(el) {
+    if (!el) { toast(t('toast_edit_text_pick')); return; }
+    if (!isTextLeaf(el)) { toast(t('toast_edit_text_not_leaf'), 2200); return; }
+    const sel = selectorFor(el);
+    const entry = ensureEntry(el, sel);
+    if (entry.original.text == null) entry.original.text = el.textContent;
+    el.contentEditable = 'true';
+    el.focus();
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const s = window.getSelection();
+      s.removeAllRanges(); s.addRange(range);
+    } catch {}
+    const onBlur = () => {
+      el.contentEditable = 'false';
+      const newText = el.textContent;
+      if (newText !== entry.original.text) entry.text = newText;
+      else delete entry.text;
+      if (entryIsEmpty(entry)) delete edits[sel];
+      save(); snapshot();
+      el.removeEventListener('blur', onBlur);
+    };
+    el.addEventListener('blur', onBlur);
+  }
+
   document.addEventListener('dblclick', e => {
     if (root.contains(e.target)) return;
     if ($bar.classList.contains('hidden') &&
@@ -1846,30 +1888,6 @@
     if (mode === 'preview') return;
     e.preventDefault();
     if (!selected) return;
-    if (isTextLeaf(selected)) {
-      const sel = selectorFor(selected);
-      const entry = ensureEntry(selected, sel);
-      if (entry.original.text == null) entry.original.text = selected.textContent;
-      selected.contentEditable = 'true';
-      selected.focus();
-      try {
-        const range = document.createRange();
-        range.selectNodeContents(selected);
-        const s = window.getSelection();
-        s.removeAllRanges(); s.addRange(range);
-      } catch {}
-      const onBlur = () => {
-        selected.contentEditable = 'false';
-        const newText = selected.textContent;
-        if (newText !== entry.original.text) entry.text = newText;
-        else delete entry.text;
-        if (entryIsEmpty(entry)) delete edits[sel];
-        save(); snapshot();
-        selected.removeEventListener('blur', onBlur);
-      };
-      selected.addEventListener('blur', onBlur);
-      return;
-    }
     if (selected.firstElementChild) selectEl(selected.firstElementChild);
   }, true);
 
