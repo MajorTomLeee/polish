@@ -772,11 +772,11 @@
     /* ─── 对齐参考线 ─── */
     .polish-guide {
       position: fixed; pointer-events: none;
-      background: var(--polish-accent);
+      background: #ff3b8b;
       z-index: 2147483645;
     }
-    .polish-guide-h { height: 1px; box-shadow: 0 0 0 0.5px var(--polish-accent); }
-    .polish-guide-v { width: 1px; box-shadow: 0 0 0 0.5px var(--polish-accent); }
+    .polish-guide-h { height: 1px; box-shadow: 0 0 0 0.5px #ff3b8b, 0 0 4px rgba(255,59,139,.6); }
+    .polish-guide-v { width: 1px; box-shadow: 0 0 0 0.5px #ff3b8b, 0 0 4px rgba(255,59,139,.6); }
 
     body.polish-active * { cursor: crosshair !important; pointer-events: auto !important; }
     body.polish-active { cursor: crosshair !important; }
@@ -909,10 +909,16 @@
   // drag 开始时缓存候选元素的 rect，避免每次 mousemove 重算
   let snapCandidates = [];
   function buildSnapCandidates(targetEls) {
-    const set = new Set(targetEls);
-    const ignore = (el) => set.has(el) || root.contains(el) ||
-      el === guideLayer || el === hoverBox || el === hoverLabel ||
-      handles.includes(el);
+    const ignore = (el) => {
+      if (root.contains(el)) return true;
+      if (el === guideLayer || el === hoverBox || el === hoverLabel) return true;
+      if (handles.includes(el)) return true;
+      // 排除目标自身、目标的祖先和后代（吸到自己/亲属上没有意义）
+      for (const t of targetEls) {
+        if (t === el || t.contains(el) || el.contains(t)) return true;
+      }
+      return false;
+    };
     snapCandidates = [];
     document.querySelectorAll('body *').forEach(el => {
       if (ignore(el)) return;
@@ -987,7 +993,7 @@
       dx: 0, dy: 0, scale: 1,
       original: {
         transform: el.style.transform || '',
-        text: el.textContent != null ? el.textContent : '',
+        text: null,
         widthCSS:  el.style.width  || cs.width,
         heightCSS: el.style.height || cs.height,
         widthPx:   parseFloat(cs.width)  || el.getBoundingClientRect().width,
@@ -1310,13 +1316,17 @@
   }
 
   function navAction(dir) {
-    if (!selected) return;
+    if (!selected) { toast(t('toast_select_first') || 'Select an element first'); return; }
     let next = null;
     if (dir === 'parent') next = selected.parentElement;
     else if (dir === 'child') next = selected.firstElementChild;
     else if (dir === 'prev')  next = selected.previousElementSibling;
     else if (dir === 'next')  next = selected.nextElementSibling;
-    if (next && !root.contains(next) && next !== document.body) selectEl(next);
+    if (!next || root.contains(next) || next === document.body || next === document.documentElement) {
+      toast({ parent: '↑ no parent', child: '↓ no child', prev: '← no sibling', next: '→ no sibling' }[dir]);
+      return;
+    }
+    selectEl(next);
   }
 
   // ─────────────────────────────────────────────
@@ -1691,6 +1701,7 @@
     if (isTextLeaf(selected)) {
       const sel = selectorFor(selected);
       const entry = ensureEntry(selected, sel);
+      if (entry.original.text == null) entry.original.text = selected.textContent;
       selected.contentEditable = 'true';
       selected.focus();
       try {

@@ -10,8 +10,10 @@
 <meta property="og:url" content="https://polish.bowie.top">
 <meta property="og:type" content="website">
 
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235b5bd6'/><path d='M11 8h6c2.8 0 5 2.2 5 5s-2.2 5-5 5h-3v6h-3V8zm3 7h3c1.1 0 2-.9 2-2s-.9-2-2-2h-3v4z' fill='white'/></svg>">
-<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235b5bd6'/><path d='M11 8h6c2.8 0 5 2.2 5 5s-2.2 5-5 5h-3v6h-3V8zm3 7h3c1.1 0 2-.9 2-2s-.9-2-2-2h-3v4z' fill='white'/></svg>">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="shortcut icon" href="/favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon-180.png">
 
 <style>
   :root {
@@ -70,12 +72,39 @@
   .nav a:not(.logo) { color: var(--fg-muted); font-size: 14px; font-weight: 500; }
   .nav a:not(.logo):hover { color: var(--fg); }
   .nav .spacer { flex: 1; }
-  .lang-switch {
+  /* lang dropdown */
+  .lang-wrap { position: relative; }
+  .lang-trigger {
     border: 1px solid var(--border); border-radius: 6px;
-    padding: 3px 10px; font-size: 12px; cursor: pointer;
+    padding: 4px 10px 4px 12px; font-size: 12px; cursor: pointer;
     background: transparent; color: var(--fg-muted);
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: inherit;
   }
-  .lang-switch:hover { border-color: var(--accent); color: var(--accent); }
+  .lang-trigger:hover { border-color: var(--accent); color: var(--accent); }
+  .lang-trigger::after {
+    content: ""; width: 0; height: 0; margin-left: 2px;
+    border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 4px solid currentColor;
+  }
+  .lang-menu {
+    position: absolute; right: 0; top: calc(100% + 6px);
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; padding: 4px; min-width: 140px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    z-index: 100;
+  }
+  .lang-menu[hidden] { display: none; }
+  .lang-menu button {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 8px 10px; border-radius: 6px;
+    border: 0; background: transparent; cursor: pointer;
+    font-size: 13.5px; color: var(--fg); text-align: left;
+    font-family: inherit;
+  }
+  .lang-menu button:hover { background: var(--bg-muted); }
+  .lang-menu button[aria-current="true"] { color: var(--accent); font-weight: 600; }
+  .lang-menu button[aria-current="true"]::after { content: "✓"; color: var(--accent); }
 
   .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
 
@@ -121,20 +150,56 @@
   .bookmarklet {
     position: relative;
     display: inline-flex; align-items: center; gap: 8px;
-    padding: 12px 22px; border-radius: 10px; font-weight: 700; font-size: 15px;
+    padding: 14px 26px; border-radius: 10px; font-weight: 700; font-size: 16px;
     background: linear-gradient(135deg, #5b5bd6 0%, #8b5cf6 100%); color: #fff;
     box-shadow: 0 8px 24px rgba(91, 91, 214, 0.25);
     text-decoration: none;
     cursor: grab;
+    transition: transform .12s, box-shadow .12s;
   }
+  .bookmarklet:active { cursor: grabbing; }
   .bookmarklet:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 12px 32px rgba(91, 91, 214, 0.35); }
   .bookmarklet::before {
-    content: ""; width: 18px; height: 18px;
+    content: ""; width: 20px; height: 20px;
     background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='white'/><path d='M11 8h6c2.8 0 5 2.2 5 5s-2.2 5-5 5h-3v6h-3V8zm3 7h3c1.1 0 2-.9 2-2s-.9-2-2-2h-3v4z' fill='%235b5bd6'/></svg>") center/contain no-repeat;
   }
-  .bookmarklet-hint {
-    color: var(--fg-muted); font-size: 13px;
+
+  /* drag guide */
+  .drag-guide {
+    display: inline-flex; align-items: center; gap: 10px;
+    color: var(--fg-muted); font-size: 13.5px;
+    padding: 6px 4px;
   }
+  .drag-guide-arrow {
+    display: inline-block; width: 56px; height: 14px;
+    position: relative;
+    animation: drag-arrow-bounce 1.4s ease-in-out infinite;
+  }
+  .drag-guide-arrow::before {
+    content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: 100%; height: 2px; background: var(--accent); border-radius: 1px;
+  }
+  .drag-guide-arrow::after {
+    content: ""; position: absolute; right: -1px; top: 50%;
+    width: 8px; height: 8px;
+    border-top: 2px solid var(--accent); border-right: 2px solid var(--accent);
+    transform: translateY(-50%) rotate(45deg);
+  }
+  @keyframes drag-arrow-bounce {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(8px); }
+  }
+
+  .drag-illustration {
+    margin: 24px auto 0; max-width: 540px;
+    background: var(--bg-muted); border: 1px dashed var(--border);
+    border-radius: 12px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 14px;
+    color: var(--fg-muted); font-size: 13.5px;
+    text-align: left;
+  }
+  .drag-illustration svg { flex-shrink: 0; }
+  .drag-illustration strong { color: var(--fg); }
 
   /* hero visual */
   .hero-visual {
@@ -234,53 +299,6 @@
   .workflow-step h4 { font-size: 14px; margin-bottom: 4px; }
   .workflow-step p { color: var(--fg-muted); font-size: 12.5px; line-height: 1.4; }
 
-  /* install modal */
-  .install-modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,.5);
-    backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 100;
-  }
-  .install-modal[hidden] { display: none; }
-  .install-modal-card {
-    width: min(560px, calc(100vw - 32px));
-    background: var(--bg); border-radius: 16px;
-    padding: 32px; box-shadow: 0 24px 64px rgba(0,0,0,0.3);
-    border: 1px solid var(--border);
-  }
-  .install-modal h2 {
-    font-size: 22px; margin-bottom: 6px; text-align: left;
-  }
-  .install-modal-tip { color: var(--fg-muted); font-size: 14px; margin-bottom: 20px; }
-  .install-modal ol {
-    list-style: none; counter-reset: step;
-  }
-  .install-modal ol li {
-    counter-increment: step;
-    padding: 12px 0 12px 44px; position: relative;
-    border-bottom: 1px solid var(--border);
-    font-size: 14.5px;
-  }
-  .install-modal ol li:last-child { border-bottom: 0; }
-  .install-modal ol li::before {
-    content: counter(step); position: absolute; left: 0; top: 12px;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--accent); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 13px;
-  }
-  .install-modal ol li code {
-    padding: 2px 6px; border-radius: 4px;
-    background: var(--bg-muted); border: 1px solid var(--border);
-  }
-  .install-modal-foot {
-    margin-top: 20px; display: flex; justify-content: space-between; align-items: center;
-    gap: 10px;
-  }
-  .install-modal-foot a {
-    color: var(--fg-muted); font-size: 13px; text-decoration: underline;
-  }
-
   /* footer */
   footer {
     padding: 80px 0 48px; border-top: 1px solid var(--border);
@@ -312,7 +330,15 @@
     <a href="#install" data-i18n="nav_install">Install</a>
     <a href="/demo/" target="_blank" data-i18n="nav_demo">Demo</a>
     <a href="https://github.com/MajorTomLeee/polish" target="_blank">GitHub</a>
-    <button class="lang-switch" id="lang-switch">中</button>
+    <div class="lang-wrap">
+      <button class="lang-trigger" id="lang-trigger" aria-haspopup="menu" aria-expanded="false">
+        <span id="lang-current">English</span>
+      </button>
+      <div class="lang-menu" id="lang-menu" role="menu" hidden>
+        <button data-lang="en" role="menuitem">English</button>
+        <button data-lang="zh" role="menuitem">中文</button>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -321,11 +347,22 @@
   <h1 data-i18n-html="hero_title">The last mile of<br><em>vibe coding</em></h1>
   <p data-i18n="hero_sub">Make any AI-generated page editable in the browser. Anyone — designers, PMs, anyone without local code — drags, recolors, retypes, and exports an AI-ready diff back to Cursor / Claude / your dev.</p>
   <div class="cta-row">
-    <button class="btn btn-primary" id="install-btn" data-i18n="cta_install">⚡ One-click install</button>
     <a class="bookmarklet" id="bookmarklet" draggable="true"
        href="javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();">Polish</a>
-    <span class="bookmarklet-hint" data-i18n="cta_drag_hint">← or drag to bookmark bar</span>
+    <span class="drag-guide">
+      <span class="drag-guide-arrow"></span>
+      <span data-i18n-html="cta_drag_hint">drag this button to your <strong>bookmarks bar</strong></span>
+    </span>
     <a class="btn btn-secondary" href="/demo/" target="_blank" data-i18n="cta_demo">Try the live demo →</a>
+  </div>
+  <div class="drag-illustration">
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+      <rect x="2" y="2" width="36" height="8" rx="2" fill="currentColor" opacity=".15"/>
+      <rect x="2" y="14" width="36" height="24" rx="3" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 3"/>
+      <circle cx="20" cy="26" r="6" fill="currentColor" opacity=".4"/>
+      <path d="M20 20 V32 M14 26 H26" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span data-i18n-html="cta_drag_illus">If you don't see your bookmarks bar, press <strong>⌘+⇧+B</strong> (Windows: <strong>Ctrl+Shift+B</strong>) first. Then drag the purple <strong>Polish</strong> button up onto it.</span>
   </div>
   <div class="hero-visual">
     <img src="polish-demo.gif" alt="Polish demo: drag → restyle → export AI-ready markdown" loading="eager">
@@ -435,12 +472,11 @@
     <div class="step step-hero">
       <div class="step-num">A</div>
       <div>
-        <h3 data-i18n="ins_a_h">One-click install (recommended for designers / PMs)</h3>
-        <p data-i18n="ins_a_p">Click the button. We copy the bookmarklet to your clipboard and walk you through 3 keystrokes.</p>
-        <button class="btn btn-primary" id="install-btn-2" data-i18n="ins_a_btn">⚡ One-click install</button>
-        <p style="margin-top: 12px;"><span data-i18n="ins_a_alt">Or drag this to your bookmark bar:</span></p>
+        <h3 data-i18n="ins_a_h">Drag to bookmark bar (recommended for designers / PMs)</h3>
+        <p data-i18n-html="ins_a_p">Show the bookmarks bar with <code>⌘+⇧+B</code> (Windows: <code>Ctrl+Shift+B</code>), then drag the purple Polish button onto it. That's it — no install, no extension.</p>
         <a class="bookmarklet" draggable="true"
            href="javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();">Polish</a>
+        <p style="margin-top: 12px; font-size: 13px;" data-i18n-html="ins_a_alt">Tip: if dragging didn't work, right-click → <strong>Bookmark this link</strong>, or <a href="#" id="download-bookmarks">download the bookmark file</a>.</p>
       </div>
     </div>
     <div class="step">
@@ -473,23 +509,6 @@ import 'polish';</pre>
   </p>
 </footer>
 
-<div class="install-modal" id="install-modal" hidden>
-  <div class="install-modal-card">
-    <h2 data-i18n="im_h">Bookmarklet copied — 3 steps left</h2>
-    <p class="install-modal-tip" data-i18n="im_tip">The Polish bookmarklet is on your clipboard. Now save it as a bookmark so you can use it on any page.</p>
-    <ol id="install-steps-list">
-      <li data-i18n-html="im_1">Press <code>⌘+⇧+B</code> (Windows: <code>Ctrl+Shift+B</code>) to show the bookmarks bar.</li>
-      <li data-i18n-html="im_2">Right-click the bookmarks bar → <strong>Add page…</strong></li>
-      <li data-i18n-html="im_3">Name: <code>Polish</code>. URL: paste from clipboard (<code>⌘+V</code>). Save.</li>
-      <li data-i18n-html="im_4">On any page, click your <strong>Polish</strong> bookmark to start editing.</li>
-    </ol>
-    <div class="install-modal-foot">
-      <a href="#" id="download-bookmarks" data-i18n="im_download">Or download a bookmark file →</a>
-      <button class="btn btn-secondary" id="install-modal-close" data-i18n="im_close">Got it</button>
-    </div>
-  </div>
-</div>
-
 <script>
   // ─── i18n ───
   const I18N = {
@@ -499,8 +518,8 @@ import 'polish';</pre>
       badge: 'v0.1 · MIT open source',
       hero_title: 'The last mile of<br><em>vibe coding</em>',
       hero_sub: 'Make any AI-generated page editable in the browser. Anyone — designers, PMs, anyone without local code — drags, recolors, retypes, and exports an AI-ready diff back to Cursor / Claude / your dev.',
-      cta_install: '⚡ One-click install',
-      cta_drag_hint: '← or drag to bookmark bar',
+      cta_drag_hint: 'drag this button to your <strong>bookmarks bar</strong>',
+      cta_drag_illus: "If you don't see your bookmarks bar, press <strong>⌘+⇧+B</strong> (Windows: <strong>Ctrl+Shift+B</strong>) first. Then drag the purple <strong>Polish</strong> button up onto it.",
       cta_demo: 'Try the live demo →',
 
       problem_h: "This shouldn't keep happening",
@@ -543,23 +562,13 @@ import 'polish';</pre>
       ft_10_p: 'Bottom pill bar, neutral palette, single accent. Reads like Vercel Toolbar or Linear, not like a debugger.',
 
       ins_h: 'Get it in 30 seconds',
-      ins_lead: 'Three ways. Pick one.',
-      ins_a_h: 'One-click install (recommended for designers / PMs)',
-      ins_a_p: 'Click the button. We copy the bookmarklet to your clipboard and walk you through 3 keystrokes.',
-      ins_a_btn: '⚡ One-click install',
-      ins_a_alt: 'Or drag this to your bookmark bar:',
+      ins_lead: 'Two ways. Pick one.',
+      ins_a_h: 'Drag to bookmark bar (recommended for designers / PMs)',
+      ins_a_p: 'Show the bookmarks bar with <code>⌘+⇧+B</code> (Windows: <code>Ctrl+Shift+B</code>), then drag the purple Polish button onto it. That\'s it — no install, no extension.',
+      ins_a_alt: 'Tip: if dragging didn\'t work, right-click → <strong>Bookmark this link</strong>, or <a href="#" id="download-bookmarks">download the bookmark file</a>.',
       ins_b_h: 'One-line script (recommended for devs)',
       ins_b_p: 'Drop this at the end of your html, then add <code>?polish=1</code> to the URL.',
       ins_c_h: 'npm (coming soon in v0.1)',
-
-      im_h: 'Bookmarklet copied — 3 steps left',
-      im_tip: 'The Polish bookmarklet is on your clipboard. Now save it as a bookmark so you can use it on any page.',
-      im_1: 'Press <code>⌘+⇧+B</code> (Windows: <code>Ctrl+Shift+B</code>) to show the bookmarks bar.',
-      im_2: 'Right-click the bookmarks bar → <strong>Add page…</strong>',
-      im_3: 'Name: <code>Polish</code>. URL: paste from clipboard (<code>⌘+V</code>). Save.',
-      im_4: 'On any page, click your <strong>Polish</strong> bookmark to start editing.',
-      im_download: 'Or download a bookmark file →',
-      im_close: 'Got it',
     },
     zh: {
       logo: 'Polish',
@@ -567,8 +576,8 @@ import 'polish';</pre>
       badge: 'v0.1 · MIT 开源',
       hero_title: 'Vibe coding 的<br><em>最后一站</em>',
       hero_sub: '让 AI 生成的页面，在浏览器里被任何人改到位。设计师、产品、不写代码的人都能拖拽、改色、改文案，导出 AI-native 改动包给 Cursor / Claude / 研发同事。',
-      cta_install: '⚡ 一键安装',
-      cta_drag_hint: '← 或拖到书签栏',
+      cta_drag_hint: '把这颗按钮拖到<strong>书签栏</strong>',
+      cta_drag_illus: '如果看不到书签栏，先按 <strong>⌘+⇧+B</strong>（Windows：<strong>Ctrl+Shift+B</strong>）显示书签栏。然后把紫色的 <strong>Polish</strong> 按钮拖到上面就好。',
       cta_demo: '在 Demo 页玩一下 →',
 
       problem_h: '这不该再发生',
@@ -611,23 +620,13 @@ import 'polish';</pre>
       ft_10_p: '底部 pill bar、中性色板、单一 accent。像 Vercel Toolbar / Linear，不像 debugger。',
 
       ins_h: '30 秒开始',
-      ins_lead: '三种方式，挑一种。',
-      ins_a_h: '一键安装（推荐设计师 / PM）',
-      ins_a_p: '点按钮，自动复制 bookmarklet，3 步键盘操作搞定。',
-      ins_a_btn: '⚡ 一键安装',
-      ins_a_alt: '或者拖这颗按钮到书签栏：',
+      ins_lead: '两种方式，挑一种。',
+      ins_a_h: '拖到书签栏（推荐设计师 / PM）',
+      ins_a_p: '按 <code>⌘+⇧+B</code>（Windows：<code>Ctrl+Shift+B</code>）显示书签栏，然后把紫色的 Polish 按钮拖上去。就这样 —— 不装包，不装插件。',
+      ins_a_alt: '提示：如果拖不动，右键 → <strong>添加为书签</strong>，或者 <a href="#" id="download-bookmarks">下载书签文件</a>。',
       ins_b_h: '一行 script（推荐研发）',
       ins_b_p: '在项目 html 末尾加这行，然后 URL 带 <code>?polish=1</code> 启用。',
       ins_c_h: 'npm（v0.1 即将发布）',
-
-      im_h: '已复制 bookmarklet — 还差 3 步',
-      im_tip: 'Polish bookmarklet 已经在你剪贴板。现在保存为书签，以后在任何页面都能用。',
-      im_1: '按 <code>⌘+⇧+B</code>（Windows：<code>Ctrl+Shift+B</code>）显示书签栏。',
-      im_2: '右键书签栏 → <strong>添加页面…</strong>',
-      im_3: '名字填 <code>Polish</code>。URL 粘贴（<code>⌘+V</code>）。保存。',
-      im_4: '在任何页面点 <strong>Polish</strong> 书签，开始改页面。',
-      im_download: '或者下载书签文件 →',
-      im_close: '我懂了',
     }
   };
 
@@ -636,6 +635,8 @@ import 'polish';</pre>
     if (stored === 'en' || stored === 'zh') return stored;
     return 'en';
   })();
+
+  const LANG_LABEL = { en: 'English', zh: '中文' };
 
   function applyI18n(lang) {
     document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
@@ -649,63 +650,97 @@ import 'polish';</pre>
       const v = I18N[lang]?.[key];
       if (v != null) el.innerHTML = v;
     });
-    document.getElementById('lang-switch').textContent = lang === 'zh' ? 'EN' : '中';
-    if (lang === 'zh') {
-      document.title = 'Polish — Vibe coding 的最后一站';
-    }
+    document.getElementById('lang-current').textContent = LANG_LABEL[lang] || 'English';
+    document.querySelectorAll('#lang-menu button').forEach(btn => {
+      btn.setAttribute('aria-current', btn.dataset.lang === lang ? 'true' : 'false');
+    });
+    document.title = lang === 'zh'
+      ? 'Polish — Vibe coding 的最后一站'
+      : 'Polish — the last mile of vibe coding';
+    bindDownloadBookmarks();
   }
   applyI18n(lang);
 
-  document.getElementById('lang-switch').addEventListener('click', () => {
-    const next = (localStorage.getItem('polish-lang') || 'en') === 'en' ? 'zh' : 'en';
+  // ─── lang dropdown ───
+  const langTrigger = document.getElementById('lang-trigger');
+  const langMenu = document.getElementById('lang-menu');
+  function closeLangMenu() {
+    langMenu.hidden = true;
+    langTrigger.setAttribute('aria-expanded', 'false');
+  }
+  langTrigger.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = !langMenu.hidden;
+    if (open) closeLangMenu();
+    else { langMenu.hidden = false; langTrigger.setAttribute('aria-expanded', 'true'); }
+  });
+  langMenu.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-lang]');
+    if (!btn) return;
+    const next = btn.dataset.lang;
     localStorage.setItem('polish-lang', next);
     applyI18n(next);
+    closeLangMenu();
+  });
+  document.addEventListener('click', e => {
+    if (!langMenu.hidden && !langMenu.contains(e.target) && e.target !== langTrigger) closeLangMenu();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !langMenu.hidden) closeLangMenu();
   });
 
-  // ─── bookmarklet drag: 让浏览器用默认行为（a.textContent='Polish' + a.href + 当前页 favicon） ───
-  // 不要 setData，否则 Chrome 把它当作普通文本拖拽，丢失 bookmark name 和 URL。
-  // 只拦截 click（用户点了而不是拖拽时弹引导），不阻止 drag 默认行为。
+  // ─── bookmarklet drag: rely on browser default (a.textContent='Polish' + a.href) ───
+  // a click on the bookmarklet on this page would try to run polish on the marketing page itself,
+  // which is meaningless — block it and gently nudge to drag instead.
   document.querySelectorAll('a.bookmarklet').forEach(el => {
     el.addEventListener('click', e => {
       e.preventDefault();
-      openInstallModal();
+      el.animate(
+        [{ transform: 'translateY(0)' }, { transform: 'translateY(-6px)' }, { transform: 'translateY(0)' }],
+        { duration: 360, easing: 'ease-out' }
+      );
     });
   });
 
-  // ─── one-click install ───
+  // ─── download bookmark HTML (so the user gets a real Polish icon) ───
   const BOOKMARKLET_CODE = "javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();";
 
-  async function openInstallModal() {
+  let _iconDataUrl = null;
+  async function getIconDataUrl() {
+    if (_iconDataUrl) return _iconDataUrl;
     try {
-      await navigator.clipboard.writeText(BOOKMARKLET_CODE);
-    } catch (_) { /* fall through */ }
-    document.getElementById('install-modal').hidden = false;
+      const r = await fetch('/favicon.png');
+      const b = await r.blob();
+      _iconDataUrl = await new Promise(res => {
+        const fr = new FileReader();
+        fr.onloadend = () => res(fr.result);
+        fr.readAsDataURL(b);
+      });
+    } catch (_) { _iconDataUrl = ''; }
+    return _iconDataUrl;
   }
-  document.getElementById('install-btn').addEventListener('click', openInstallModal);
-  document.getElementById('install-btn-2').addEventListener('click', openInstallModal);
-  document.getElementById('install-modal-close').addEventListener('click', () => {
-    document.getElementById('install-modal').hidden = true;
-  });
-  document.getElementById('install-modal').addEventListener('click', e => {
-    if (e.target.id === 'install-modal') e.target.hidden = true;
-  });
 
-  // ─── download as bookmark file ───
-  document.getElementById('download-bookmarks').addEventListener('click', e => {
-    e.preventDefault();
-    const html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+  function bindDownloadBookmarks() {
+    const link = document.getElementById('download-bookmarks');
+    if (!link || link.dataset.bound) return;
+    link.dataset.bound = '1';
+    link.addEventListener('click', async e => {
+      e.preventDefault();
+      const icon = await getIconDataUrl();
+      const html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
 <TITLE>Bookmarks</TITLE>
 <H1>Bookmarks</H1>
 <DL><p>
-  <DT><A HREF="${BOOKMARKLET_CODE.replace(/"/g, '&quot;')}" ICON_URI="https://polish.bowie.top/favicon.svg">Polish</A>
+  <DT><A HREF="${BOOKMARKLET_CODE.replace(/"/g, '&quot;')}" ICON="${icon}" ICON_URI="https://polish.bowie.top/favicon.png">Polish</A>
 </DL><p>`;
-    const blob = new Blob([html], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'polish-bookmark.html';
-    a.click();
-  });
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'polish-bookmark.html';
+      a.click();
+    });
+  }
 </script>
 </body>
 </html>
