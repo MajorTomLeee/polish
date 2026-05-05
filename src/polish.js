@@ -61,6 +61,15 @@
       vp_orig: 'Original',
       menu_share: 'Copy share link', menu_bookmarklet: 'Copy bookmarklet',
       menu_reset: 'Reset all edits', menu_hide: 'Hide Polish toolbar', menu_about: 'About Polish ↗',
+      menu_baseline: 'Clear baseline (after merging to source)',
+      btn_preview: 'Preview', btn_edit: 'Edit',
+      title_preview: 'Preview mode — turn off editing temporarily',
+      title_edit: 'Back to editing',
+      toast_preview_on: 'Preview mode — click again to edit',
+      toast_preview_off: 'Editing again',
+      confirm_baseline: 'Clear all local edits and notes WITHOUT undoing them on the page? Use this after you have merged changes to source code, so Polish starts from the new baseline.',
+      toast_baseline: 'Baseline cleared — reload page to verify',
+      toast_too_big: 'That spot hit a giant container. Click on the actual text / image / button.',
       modal_export_title: 'Export — AI-ready markdown',
       modal_export_tip: 'Paste this whole block to Claude / Cursor / your dev. Selectors, CSS diffs, and notes are included.',
       copy_all: 'Copy all', download_md: 'Download .md', share_link: 'Copy share link',
@@ -117,6 +126,15 @@
       vp_orig: '原始',
       menu_share: '复制分享链接', menu_bookmarklet: '复制 bookmarklet',
       menu_reset: '重置所有改动', menu_hide: '隐藏 Polish 工具栏', menu_about: '关于 Polish ↗',
+      menu_baseline: '清空基线（改动已合入源码）',
+      btn_preview: '预览', btn_edit: '编辑',
+      title_preview: '预览模式 — 暂时关闭编辑',
+      title_edit: '回到编辑',
+      toast_preview_on: '已切到预览，再点回到编辑',
+      toast_preview_off: '回到编辑',
+      confirm_baseline: '清空本地所有编辑和备注，但不还原页面 DOM？用于：你已经把改动合入源码后，让 Polish 从新基线重新开始。',
+      toast_baseline: '基线已清空 — 刷新页面验证',
+      toast_too_big: '点位命中了大容器。请点准文字 / 图片 / 按钮等具体内容。',
       modal_export_title: '导出改动 — AI-ready markdown',
       modal_export_tip: '把下面整段粘给 Claude / Cursor / 研发同事。已自动包含选择器、CSS diff、备注。',
       copy_all: '复制全部', download_md: '下载 .md', share_link: '复制分享链接',
@@ -243,25 +261,58 @@
   function visibleStack(x, y) {
     return document.elementsFromPoint(x, y).filter(el => {
       if (root.contains(el)) return false;
-      if (el === hoverBox || el === hoverLabel) return false;
+      if (el === hoverBox || el === hoverLabel || el === guideLayer) return false;
+      if (handles.includes(el)) return false;
       if (el === document.documentElement || el === document.body) return false;
       if (!isVisible(el)) return false;
       return true;
     });
   }
 
-  function namedAncestor(el) {
-    let cur = el;
-    while (cur && cur !== document.body) {
-      const named = cur.id || [...cur.classList].some(c => !c.startsWith('polish-') && c.length >= 3);
-      if (named) {
-        const display = getComputedStyle(cur).display;
-        if (display === 'inline') { cur = cur.parentElement; continue; }
-        return cur;
+  // pointer 模式：从最深的命中开始，必要时只往上"轻微"上溯一两层
+  // - 如果元素是 SPAN/EM/STRONG/B/I/U/A 这种 inline，且父级也合理，上溯到块级父
+  // - 否则就是当前元素，不再上溯到 section / nav 这种巨型容器
+  function isHugeContainer(el) {
+    const r = el.getBoundingClientRect();
+    return r.width  >= window.innerWidth  * 0.85
+        && r.height >= window.innerHeight * 0.6;
+  }
+  // 如果命中点是巨型容器（hero/section/footer），用 caretRangeFromPoint 找该
+  // 位置最近的文本节点的父元素，让"点击空白也能命中附近文字"
+  function refineByCaret(x, y, container) {
+    let node = null;
+    if (document.caretRangeFromPoint) {
+      const r = document.caretRangeFromPoint(x, y);
+      if (r && r.startContainer) node = r.startContainer;
+    } else if (document.caretPositionFromPoint) {
+      const r = document.caretPositionFromPoint(x, y);
+      if (r && r.offsetNode) node = r.offsetNode;
+    }
+    if (!node) return null;
+    if (node.nodeType === 3) node = node.parentElement;
+    if (!node || node === container || !container.contains(node)) return null;
+    if (root.contains(node)) return null;
+    if (isHugeContainer(node)) return null;
+    return node;
+  }
+  function inlineUp(el) {
+    const cs = getComputedStyle(el);
+    if (cs.display === 'inline' || /^(SPAN|EM|STRONG|B|I|U|A|CODE|SMALL|BR)$/.test(el.tagName)) {
+      let p = el.parentElement;
+      if (p && p !== document.body && p !== document.documentElement) {
+        const pcs = getComputedStyle(p);
+        if (pcs.display !== 'inline' && !isHugeContainer(p)) return p;
       }
-      cur = cur.parentElement;
     }
     return el;
+  }
+  function smartTarget(el, x, y) {
+    if (!el || el === document.body || el === document.documentElement) return null;
+    if (isHugeContainer(el)) {
+      const refined = refineByCaret(x, y, el);
+      return refined ? inlineUp(refined) : null;
+    }
+    return inlineUp(el);
   }
 
   function targetAt(x, y, opts) {
@@ -272,7 +323,7 @@
       const idx = stack.indexOf(selected);
       if (idx >= 0 && idx + 1 < stack.length) raw = stack[idx + 1];
     }
-    return mode === 'deep' ? raw : namedAncestor(raw);
+    return mode === 'deep' ? raw : smartTarget(raw, x, y);
   }
 
   // ─────────────────────────────────────────────
@@ -349,6 +400,11 @@
         <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 3v10M6 9l4 4 4-4M3 17h14"/></svg>
         <span class="label">${t('btn_export')}</span>
         <span class="polish-count" hidden>0</span>
+      </button>
+
+      <button class="polish-btn polish-preview-btn" data-action="preview" title="${t('title_preview')}">
+        <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 10s3-6 8-6 8 6 8 6-3 6-8 6-8-6-8-6z"/><circle cx="10" cy="10" r="2.5"/></svg>
+        <span class="label">${t('btn_preview')}</span>
       </button>
 
       <button class="polish-btn polish-icon polish-menu" data-action="menu" title="${t('title_menu')}">
@@ -435,6 +491,7 @@
       <button class="polish-menu-item" data-action="copy-share">${t('menu_share')}</button>
       <button class="polish-menu-item" data-action="bookmarklet">${t('menu_bookmarklet')}</button>
       <button class="polish-menu-item" data-action="reset">${t('menu_reset')}</button>
+      <button class="polish-menu-item" data-action="baseline">${t('menu_baseline')}</button>
       <button class="polish-menu-item" data-action="hide">${t('menu_hide')}</button>
       <a class="polish-menu-item" href="https://polish.bowie.top" target="_blank" rel="noopener">${t('menu_about')}</a>
     </div>
@@ -779,6 +836,13 @@
 
     body.polish-active * { cursor: crosshair !important; pointer-events: auto !important; }
     body.polish-active { cursor: crosshair !important; }
+    body.polish-preview-mode, body.polish-preview-mode * { cursor: auto !important; }
+    body.polish-preview-mode .polish-hover-box,
+    body.polish-preview-mode .polish-hover-label,
+    body.polish-preview-mode .polish-handle { display: none !important; }
+    body.polish-preview-mode .polish-selected,
+    body.polish-preview-mode .polish-multi { outline: none !important; }
+    .polish-preview-btn[data-on="1"] { background: var(--polish-accent) !important; color: #fff !important; }
     #polish-root, #polish-root *,
     .polish-hover-box, .polish-hover-label,
     .polish-handle, .polish-overlay-img, .polish-overlay-img * { pointer-events: auto !important; }
@@ -852,28 +916,78 @@
 
   function setMode(m) {
     mode = m;
-    $modeBtn.dataset.mode = m;
-    $modeBtn.querySelector('.label').textContent = m === 'pointer' ? t('mode_pointer') : t('mode_deep');
+    if (m === 'pointer' || m === 'deep') {
+      $modeBtn.dataset.mode = m;
+      $modeBtn.querySelector('.label').textContent = m === 'pointer' ? t('mode_pointer') : t('mode_deep');
+    }
+  }
+
+  // popover / toolbar 内的 mouse / click 不要冒泡到 document 全局 listener，
+  // 否则 capture 阶段早 return 没做事，但任何潜在的 stopPropagation 副作用都被绕开
+  ['mousedown', 'mouseup', 'click'].forEach(type => {
+    root.addEventListener(type, e => e.stopPropagation());
+  });
+
+  let _modeBeforePreview = 'pointer';
+  function togglePreview() {
+    const $previewBtn = root.querySelector('.polish-preview-btn');
+    if (mode === 'preview') {
+      setMode(_modeBeforePreview || 'pointer');
+      document.body.classList.remove('polish-preview-mode');
+      $previewBtn.removeAttribute('data-on');
+      $previewBtn.title = t('title_preview');
+      $previewBtn.querySelector('.label').textContent = t('btn_preview');
+      toast(t('toast_preview_off'));
+    } else {
+      _modeBeforePreview = mode;
+      setMode('preview');
+      document.body.classList.add('polish-preview-mode');
+      closePopovers();
+      deselect();
+      hoverBox.style.display = 'none'; hoverLabel.style.display = 'none';
+      $previewBtn.setAttribute('data-on', '1');
+      $previewBtn.title = t('title_edit');
+      $previewBtn.querySelector('.label').textContent = t('btn_edit');
+      toast(t('toast_preview_on'));
+    }
   }
 
   function closePopovers(except) {
     Object.entries(popovers).forEach(([k, el]) => { if (k !== except) el.hidden = true; });
   }
 
-  function togglePopover(name) {
+  function togglePopover(name, anchorBtn) {
     const el = popovers[name];
     if (!el) return;
     const wasHidden = el.hidden;
     closePopovers(wasHidden ? name : null);
     el.hidden = !wasHidden;
+    if (!el.hidden) anchorPopover(el, anchorBtn);
+  }
+
+  function anchorPopover(el, anchorBtn) {
+    // menu popover 锚到对应按钮（右下角对齐到按钮上方）；其它仍居中
+    el.style.left = '';
+    el.style.right = '';
+    el.style.top = '';
+    el.style.bottom = '';
+    el.style.transform = '';
+    if (!anchorBtn || !el.classList.contains('polish-menu-popover')) return;
+    const r = anchorBtn.getBoundingClientRect();
+    el.style.left = 'auto';
+    el.style.transform = 'none';
+    el.style.right = Math.max(8, window.innerWidth - r.right) + 'px';
+    el.style.bottom = (window.innerHeight - r.top + 8) + 'px';
   }
 
   // hover 框 / handles
   const hoverBox = document.createElement('div');
   hoverBox.className = 'polish-hover-box'; hoverBox.style.display = 'none';
+  hoverBox.style.setProperty('pointer-events', 'none', 'important');
   document.body.appendChild(hoverBox);
   const hoverLabel = document.createElement('div');
   hoverLabel.className = 'polish-hover-label'; hoverLabel.style.display = 'none';
+  hoverLabel.style.setProperty('pointer-events', 'none', 'important');
   document.body.appendChild(hoverLabel);
 
   const HANDLE_DIRS = ['nw','n','ne','e','se','s','sw','w'];
@@ -887,7 +1001,11 @@
 
   // 对齐参考线（拖动时显示）
   const guideLayer = document.createElement('div');
-  guideLayer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483645;';
+  guideLayer.className = 'polish-guide-layer';
+  guideLayer.style.cssText = 'position:fixed;inset:0;z-index:2147483645;';
+  // body.polish-active * 用 !important 强制 pointer-events:auto，
+  // inline !important 才能压过它，不然 guideLayer 会截胡所有点击
+  guideLayer.style.setProperty('pointer-events', 'none', 'important');
   document.body.appendChild(guideLayer);
   function clearGuides() { guideLayer.innerHTML = ''; }
   function addGuide(type, pos, span) {
@@ -1095,6 +1213,12 @@
   // ─────────────────────────────────────────────
   function selectEl(el, opts = {}) {
     if (!el) return;
+    if (window.__POLISH_DEBUG__) {
+      const r = el.getBoundingClientRect();
+      console.log('[Polish] select', selectorFor(el),
+        `(${Math.round(r.width)}×${Math.round(r.height)}) at (${Math.round(r.x)},${Math.round(r.y)})`,
+        el);
+    }
     if (opts.add) {
       if (selected === el) return;
       const idx = extraSelected.indexOf(el);
@@ -1387,15 +1511,16 @@
     const action = btn.dataset.action;
     if (action === 'about') {
       window.open('https://polish.bowie.top', '_blank');
-    } else if (action === 'style')   togglePopover('style');
-    else if (action === 'note')    togglePopover('note');
-    else if (action === 'align')   togglePopover('align');
-    else if (action === 'viewport') togglePopover('viewport');
-    else if (action === 'menu')    togglePopover('menu');
+    } else if (action === 'style')   togglePopover('style', btn);
+    else if (action === 'note')    togglePopover('note', btn);
+    else if (action === 'align')   togglePopover('align', btn);
+    else if (action === 'viewport') togglePopover('viewport', btn);
+    else if (action === 'menu')    togglePopover('menu', btn);
     else if (action === 'undo')    undo();
     else if (action === 'redo')    redoFn();
     else if (action === 'overlay') openOverlay();
     else if (action === 'export')  openExportModal();
+    else if (action === 'preview') togglePreview();
     else if (action === 'lang')    toggleLang();
   });
 
@@ -1413,11 +1538,25 @@
     if (a === 'reset') resetAll();
     else if (a === 'copy-share') copyShareLink();
     else if (a === 'bookmarklet') copyBookmarklet();
+    else if (a === 'baseline')   resetBaseline();
     else if (a === 'hide') {
       $bar.classList.add('hidden');
       toast(t('toast_hide_hint'));
     }
   });
+
+  function resetBaseline() {
+    if (!confirm(t('confirm_baseline'))) return;
+    edits = {}; notes = {};
+    redoStack.length = 0;
+    history.length = 0;
+    history.push({});
+    document.querySelectorAll('.polish-noted').forEach(n => n.classList.remove('polish-noted'));
+    deselect();
+    save();
+    updateBadge();
+    toast(t('toast_baseline'));
+  }
 
   function resetAll() {
     if (!confirm(t('confirm_reset'))) return;
@@ -1560,6 +1699,7 @@
   // 鼠标交互
   // ─────────────────────────────────────────────
   document.addEventListener('mousemove', e => {
+    if (mode === 'preview') return;
     if (resize) {
       const o = edits[resize.sel];
       const ddx = e.clientX - resize.startX;
@@ -1622,6 +1762,7 @@
 
   document.addEventListener('mousedown', e => {
     if (root.contains(e.target)) return;
+    if (mode === 'preview') return;
     if (e.button !== 0) return;
     if (e.target.classList && e.target.classList.contains('polish-handle') && selected) {
       e.preventDefault(); e.stopPropagation();
@@ -1640,7 +1781,12 @@
       return;
     }
     const el = targetAt(e.clientX, e.clientY, { penetrate: e.altKey });
-    if (!el) return;
+    if (!el) {
+      // 命中了过大的容器（hero section / footer 等），告知用户点准内容
+      const stack = visibleStack(e.clientX, e.clientY);
+      if (stack.length && isHugeContainer(stack[0])) toast(t('toast_too_big'), 2000);
+      return;
+    }
     e.preventDefault(); e.stopPropagation();
     if (e.shiftKey) { selectEl(el, { add: true }); return; }
     if (e.altKey)   { selectEl(el); return; }
@@ -1660,20 +1806,22 @@
   }, true);
 
   document.addEventListener('mouseup', () => {
+    clearGuides();
+    document.body.classList.remove('polish-dragging');
     if (resize) {
-      document.body.classList.remove('polish-dragging');
       save(); updateHandles(); snapshot();
       resize = null; return;
     }
     if (!drag) return;
-    document.body.classList.remove('polish-dragging');
-    clearGuides();
     for (const t of drag.targets) {
       if (entryIsEmpty(edits[t.sel])) delete edits[t.sel];
     }
     save(); snapshot();
     drag = null;
   });
+  // 兜底：鼠标离开窗口或失焦时也清理，防止 guide 卡住
+  window.addEventListener('blur', () => { clearGuides(); drag = null; resize = null; document.body.classList.remove('polish-dragging'); });
+  window.addEventListener('mouseleave', () => clearGuides());
 
   document.addEventListener('click', e => {
     if (root.contains(e.target)) return;
@@ -1695,6 +1843,7 @@
       $bar.classList.remove('hidden');
       return;
     }
+    if (mode === 'preview') return;
     e.preventDefault();
     if (!selected) return;
     if (isTextLeaf(selected)) {
@@ -1742,6 +1891,7 @@
 
   // 键盘
   document.addEventListener('keydown', e => {
+    if (mode === 'preview' && e.key !== 'Escape') return;
     const ae = document.activeElement;
     if (ae && (['INPUT','TEXTAREA','SELECT'].includes(ae.tagName) || ae.isContentEditable)) {
       if (e.key === 'Escape' && ae.classList.contains('polish-note-input')) ae.blur();
