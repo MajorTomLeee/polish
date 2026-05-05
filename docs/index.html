@@ -211,8 +211,11 @@
   }
   .hero-visual img { width: 100%; height: auto; display: block; }
 
-  /* sections */
-  section { padding: 128px 0; }
+  /* sections — 每个 section 之间的 gap 是上一个 padding-bottom + 下一个 padding-top */
+  section { padding: 96px 0; }
+  #solution { padding-top: 131px; }   /* problem → solution gap ≈ 227 */
+  #features { padding-top: 126px; }   /* solution → features gap ≈ 222 */
+  #install  { padding-top: 50px;  }   /* features → install gap ≈ 146 */
   section h2 {
     font-size: clamp(28px, 3.5vw, 40px); font-weight: 700;
     text-align: center; margin-bottom: 12px; letter-spacing: -0.02em;
