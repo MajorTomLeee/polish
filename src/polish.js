@@ -93,7 +93,7 @@
       stats_styles: (n) => `${n} style change${n === 1 ? '' : 's'}`,
       stats_notes: (n) => `${n} note${n === 1 ? '' : 's'}`,
       task_heading: 'Task',
-      task_intro: 'Apply all edits below to the source code. Each `### selector` is one target element. For each one you have:',
+      task_intro: 'Apply all edits below to the source code. **All CSS values are absolute final state, not deltas — paste them as-is, do not add to any existing value.** When a `/* origin: Xpx */` comment is present, that\'s the value the element had at the start of this Polish session; verify the source CSS still matches that origin before patching (if it doesn\'t, stop and ask). Each `### selector` is one target element. For each one you have:',
       task_bullets: '- CSS diff (paste straight into the matching file)\n- Text / note (so you understand the design intent)',
       task_lib_hint: 'If the project uses a component library or utility classes (Tailwind / shadcn / Material / Ant), translate to the equivalent idiomatic form — do not inline-style.',
       tailwind_hint: '> Project detected as using Tailwind CSS. Translate CSS diffs to equivalent utility classes (e.g. `padding-left: 24px` → `pl-6`) before applying.',
@@ -162,7 +162,7 @@
       stats_styles: (n) => `${n} 处样式`,
       stats_notes: (n) => `${n} 条备注`,
       task_heading: '任务',
-      task_intro: '请把下面所有改动落进源代码。每个 `### selector` 是一个目标元素，下面是该元素的：',
+      task_intro: '请把下面所有改动落进源代码。**所有 CSS 数值都是「最终值」，不是增量 —— 直接覆盖原值，不要叠加。** 如果出现 `/* origin: Xpx */` 注释，那是 Polish 会话开始时元素的原值；落地前请确认源 CSS 仍然是该原值，若已不一致请先停下来确认。每个 `### selector` 是一个目标元素，下面是该元素的：',
       task_bullets: '- CSS diff（直接复制到对应文件）\n- 文案 / 备注（理解设计意图）',
       task_lib_hint: '如果项目使用组件库 / 工具类（Tailwind / shadcn / Material / Ant），请用对应的方式实现等价效果，不要直接 inline style。',
       tailwind_hint: '> 项目检测到使用 Tailwind CSS。请优先把 CSS diff 翻译成等价的 Tailwind utility class（例如 `padding-left: 24px` → `pl-6`）再落代码。',
@@ -1115,19 +1115,42 @@
   //     original: { props: {...}, transform, text, widthCSS, heightCSS, parentW, parentH }
   //   }
   // ─────────────────────────────────────────────
+  // Properties that the style panel can edit. We snapshot the computed value
+  // of each when an element first becomes an edit target — this is the
+  // "origin" baseline that export comments reference, so the AI applying the
+  // diff can verify it's patching against the same starting state.
+  const TRACKED_PROPS = [
+    'background-color', 'color', 'border-color', 'border-radius',
+    'font-size', 'font-weight', 'line-height', 'letter-spacing',
+    'opacity', 'box-shadow',
+    'margin-top','margin-right','margin-bottom','margin-left',
+    'padding-top','padding-right','padding-bottom','padding-left',
+  ];
+
+  function snapshotComputed(el) {
+    const cs = getComputedStyle(el);
+    const out = {};
+    TRACKED_PROPS.forEach(p => { out[p] = cs.getPropertyValue(p).trim(); });
+    return out;
+  }
+
   function ensureEntry(el, sel) {
     if (edits[sel]) return edits[sel];
     const cs = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
     edits[sel] = {
       props: {},
       dx: 0, dy: 0, scale: 1,
       original: {
         transform: el.style.transform || '',
+        computedTransform: cs.transform && cs.transform !== 'none' ? cs.transform : '',
+        computed: snapshotComputed(el),
+        rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height },
         text: null,
         widthCSS:  el.style.width  || cs.width,
         heightCSS: el.style.height || cs.height,
-        widthPx:   parseFloat(cs.width)  || el.getBoundingClientRect().width,
-        heightPx:  parseFloat(cs.height) || el.getBoundingClientRect().height,
+        widthPx:   parseFloat(cs.width)  || rect.width,
+        heightPx:  parseFloat(cs.height) || rect.height,
         parentW:   el.parentElement ? el.parentElement.getBoundingClientRect().width  : 0,
         parentH:   el.parentElement ? el.parentElement.getBoundingClientRect().height : 0,
       }
@@ -1617,8 +1640,17 @@
       if (e) {
         const css = [];
         if (e.dx || e.dy || (e.scale && e.scale !== 1)) {
-          const tx = `translate(${e.dx||0}px, ${e.dy||0}px)${e.scale && e.scale !== 1 ? ` scale(${e.scale.toFixed(3)})` : ''}`;
-          css.push(`  transform: ${tx};  ${t('transform_comment')}`);
+          const baseT = e.original?.transform && e.original.transform !== 'none'
+            ? e.original.transform.trim() : '';
+          // Round to 1 decimal — devicePixelRatio drag math otherwise produces
+          // noise like 0.00390625px that AI may misread as intentional precision.
+          const round1 = n => Math.round((n || 0) * 10) / 10;
+          const dx1 = round1(e.dx), dy1 = round1(e.dy);
+          const dyn = `translate(${dx1}px, ${dy1}px)${e.scale && e.scale !== 1 ? ` scale(${e.scale.toFixed(3)})` : ''}`;
+          // Match exactly what applyEdit() rendered: baseT + dyn
+          const tx = baseT ? `${baseT} ${dyn}` : dyn;
+          const origNote = baseT ? `origin transform: ${baseT}` : 'origin transform: none';
+          css.push(`  transform: ${tx};  /* ${origNote}; this is the absolute final value — write it as-is, do NOT append to any existing transform */`);
         }
         if (e.width != null) {
           css.push(`  width: ${smartSize(e.width, e.original?.widthCSS, e.original?.parentW, window.innerWidth)};`);
@@ -1627,7 +1659,12 @@
           css.push(`  height: ${smartSize(e.height, e.original?.heightCSS, e.original?.parentH, window.innerHeight)};`);
         }
         Object.entries(e.props || {}).forEach(([p, v]) => {
-          css.push(`  ${p}: ${v};`);
+          const orig = e.original?.computed?.[p];
+          if (orig != null && orig !== '' && orig !== v) {
+            css.push(`  ${p}: ${v};  /* origin: ${orig} (absolute final value, not a delta) */`);
+          } else {
+            css.push(`  ${p}: ${v};`);
+          }
         });
         if (css.length) {
           lines.push('```css');
@@ -1945,5 +1982,16 @@
   applyAllEdits();
   setMode('pointer');
   updateBadge();
+
+  // Headless test hook (used by scripts/verify-export.mjs and any future
+  // automated regression tests). Stays a thin facade so it can't be relied
+  // on as a public API.
+  window.__POLISH_TEST__ = {
+    selectEl,
+    buildExportMarkdown,
+    ensureEntry,
+    edits,
+  };
+
   console.log('%c[Polish]', 'color:#5b5bd6;font-weight:600', t('console_msg'));
 })();

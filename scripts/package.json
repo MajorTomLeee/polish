@@ -1,0 +1,9 @@
+{
+  "name": "polish-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Internal tooling: GIF generators, etc. Not shipped in npm package.",
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}
