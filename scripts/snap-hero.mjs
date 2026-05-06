@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1280, height: 2200 }, deviceScaleFactor: 1 });
+const page = await ctx.newPage();
+await page.goto('http://127.0.0.1:8910/');
+await page.waitForLoadState('networkidle');
+await page.waitForTimeout(800);
+await page.screenshot({ path: '/tmp/polish-hero.png', clip: { x: 0, y: 0, width: 1280, height: 2200 } });
+await browser.close();
+console.log('saved /tmp/polish-hero.png');

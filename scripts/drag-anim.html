@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>drag-anim</title>
+<style>
+  :root {
+    --accent: #5b5bd6;
+    --accent2: #8b5cf6;
+    --fg: #0a0a0a;
+    --fg-muted: #6b7280;
+    --bg: #ffffff;
+    --bg-soft: #f5f5f7;
+    --border: #e5e5e7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 720px; height: 405px;
+    background: #eef0f6;
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "PingFang SC", system-ui, sans-serif;
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  .stage {
+    width: 720px; height: 405px; padding: 18px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .frame {
+    width: 684px; height: 369px;
+    background: var(--bg);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(20, 24, 60, .12), 0 1px 0 rgba(255,255,255,.4) inset;
+    overflow: hidden;
+    position: relative;
+  }
+  /* browser chrome */
+  .chrome {
+    height: 28px; background: #fafafb; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 12px; gap: 7px;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot.r { background: #ff605c; }
+  .dot.y { background: #ffbd44; }
+  .dot.g { background: #00ca4e; }
+  .url {
+    margin-left: 16px; flex: 1; height: 16px;
+    background: #ececef; border-radius: 8px;
+    font-size: 10.5px; color: #8a8a8e;
+    line-height: 16px; padding: 0 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .url::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%;
+    background: #c7c7cc; flex-shrink: 0;
+  }
+  /* bookmark bar */
+  .bm-bar {
+    height: 26px; background: #fcfcfd;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 11.5px; color: var(--fg-muted);
+    position: relative;
+  }
+  .bm-bar .item {
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .bm-bar .item::before {
+    content: ""; width: 11px; height: 11px; border-radius: 2px;
+    background: #d6d6db;
+  }
+  /* drop zone hint (the gap where Polish lands) */
+  .drop-hint {
+    position: absolute;
+    left: 130px; top: 4px;
+    width: 78px; height: 18px;
+    border: 2px dashed var(--accent);
+    border-radius: 5px;
+    opacity: 0;
+    animation: dropHintShow 5s ease-in-out infinite;
+  }
+  @keyframes dropHintShow {
+    0%, 30% { opacity: 0; transform: scale(.85); }
+    35%, 62% { opacity: .9; transform: scale(1); }
+    66%, 100% { opacity: 0; transform: scale(1.05); }
+  }
+  /* the new bookmark, appears after drop */
+  .bm-new {
+    position: absolute;
+    left: 134px; top: 6px;
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11.5px; font-weight: 600; color: var(--fg);
+    opacity: 0;
+    transform: scale(.6);
+    animation: bmIn 5s ease-in-out infinite;
+  }
+  .bm-new .glyph {
+    width: 12px; height: 12px; border-radius: 3px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 9px; font-weight: 800;
+  }
+  .bm-new .glyph::before { content: "P"; }
+  @keyframes bmIn {
+    0%, 66% { opacity: 0; transform: scale(.6); }
+    70% { opacity: 1; transform: scale(1.25); }
+    74%, 100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* page content */
+  .page {
+    height: calc(100% - 54px);
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center;
+    padding: 0 32px;
+    position: relative;
+  }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    background: rgba(91,91,214,.12); color: var(--accent);
+    font-size: 10.5px; font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .title {
+    font-size: 30px; font-weight: 700; letter-spacing: -.02em;
+    margin-bottom: 8px; line-height: 1.1;
+    background: linear-gradient(180deg, var(--fg) 0%, #5a5a64 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .title em { color: var(--accent); font-style: normal; -webkit-text-fill-color: var(--accent); }
+  .sub {
+    font-size: 12px; color: var(--fg-muted);
+    margin-bottom: 22px;
+    text-align: center;
+  }
+  /* original button (in page) */
+  .btn-original {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 20px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-weight: 700; font-size: 14px;
+    box-shadow: 0 6px 18px rgba(91,91,214,.3);
+    animation: btnFade 5s ease-in-out infinite;
+  }
+  .btn-original::before {
+    content: "P"; width: 14px; height: 14px; border-radius: 3px;
+    background: #fff; color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+  }
+  @keyframes btnFade {
+    0%, 30% { opacity: 1; transform: scale(1); }
+    32% { opacity: .25; transform: scale(.96); }
+    100% { opacity: .25; transform: scale(.96); }
+  }
+
+  /* dragging ghost — flies from button to bookmark bar */
+  .ghost {
+    position: absolute;
+    left: 0; top: 0;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 20px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-weight: 700; font-size: 14px;
+    box-shadow: 0 14px 32px rgba(91,91,214,.45);
+    pointer-events: none;
+    opacity: 0;
+    transform-origin: 24px 20px;
+    animation: ghostFly 5s ease-in-out infinite;
+  }
+  .ghost::before {
+    content: "P"; width: 14px; height: 14px; border-radius: 3px;
+    background: #fff; color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800;
+  }
+  @keyframes ghostFly {
+    /* hidden until press */
+    0%, 30% {
+      opacity: 0;
+      transform: translate(294px, 200px) scale(1);
+    }
+    /* appear on press */
+    32% {
+      opacity: 1;
+      transform: translate(294px, 200px) scale(1.04) rotate(-1deg);
+    }
+    /* drag up-left to bookmark bar */
+    62% {
+      opacity: 1;
+      transform: translate(108px, 30px) scale(.55) rotate(-3deg);
+    }
+    /* settle on bar */
+    66% {
+      opacity: 1;
+      transform: translate(108px, 30px) scale(.45) rotate(0deg);
+    }
+    /* fade as it becomes the bookmark */
+    70% {
+      opacity: 0;
+      transform: translate(108px, 30px) scale(.4);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(108px, 30px) scale(.4);
+    }
+  }
+
+  /* cursor */
+  .cursor {
+    position: absolute;
+    width: 22px; height: 28px;
+    pointer-events: none;
+    z-index: 10;
+    animation: cursorPath 5s ease-in-out infinite;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.25));
+  }
+  .cursor svg { width: 100%; height: 100%; display: block; }
+  @keyframes cursorPath {
+    /* idle bottom-right */
+    0%   { transform: translate(540px, 290px); }
+    8%   { transform: translate(540px, 290px); }
+    /* approach button center */
+    26%  { transform: translate(338px, 222px); }
+    30%  { transform: translate(338px, 222px); }
+    /* press (slight squish) */
+    32%  { transform: translate(338px, 222px) scale(.92); }
+    /* drag up-left to bookmark bar */
+    62%  { transform: translate(152px, 50px) scale(.92); }
+    /* release */
+    66%  { transform: translate(152px, 50px) scale(1); }
+    /* small celebratory pull-back */
+    74%  { transform: translate(168px, 64px) scale(1); }
+    100% { transform: translate(168px, 64px) scale(1); }
+  }
+
+  /* moving guidance arrow that pulses up at the bookmark bar */
+  .pulse {
+    position: absolute;
+    left: 152px; top: 38px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    animation: pulse 5s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes pulse {
+    0%, 64% { opacity: 0; transform: scale(.4); }
+    66% { opacity: .55; transform: scale(1); }
+    72% { opacity: 0; transform: scale(2.2); }
+    100% { opacity: 0; transform: scale(2.2); }
+  }
+
+  /* caption strip below frame */
+  .caption {
+    position: absolute;
+    left: 50%; bottom: 16px;
+    transform: translateX(-50%);
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--fg-muted);
+    background: rgba(255,255,255,.85);
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    animation: captionSwap 5s linear infinite;
+  }
+  .caption .step {
+    position: absolute; opacity: 0; white-space: nowrap;
+    left: 50%; top: 50%; transform: translate(-50%, -50%);
+  }
+  .caption .step.s1 { animation: cap1 5s linear infinite; }
+  .caption .step.s2 { animation: cap2 5s linear infinite; }
+  .caption .step.s3 { animation: cap3 5s linear infinite; }
+  @keyframes captionSwap {
+    0%, 100% { width: 220px; }
+  }
+  @keyframes cap1 {
+    0%, 28% { opacity: 1; }
+    32%, 100% { opacity: 0; }
+  }
+  @keyframes cap2 {
+    0%, 32% { opacity: 0; }
+    36%, 62% { opacity: 1; }
+    66%, 100% { opacity: 0; }
+  }
+  @keyframes cap3 {
+    0%, 66% { opacity: 0; }
+    70%, 96% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <div class="url">polish.bowie.top</div>
+    </div>
+    <div class="bm-bar">
+      <span class="item">Apple</span>
+      <span class="item">News</span>
+      <span class="drop-hint"></span>
+      <span class="bm-new"><span class="glyph"></span><span>Polish</span></span>
+    </div>
+    <div class="page">
+      <span class="badge">v0.1 · MIT</span>
+      <h1 class="title">The last mile of <em>vibe coding</em></h1>
+      <p class="sub">Drag the button to your bookmarks bar →</p>
+      <a class="btn-original">Polish</a>
+    </div>
+
+    <div class="ghost">Polish</div>
+    <div class="pulse"></div>
+    <div class="cursor">
+      <svg viewBox="0 0 22 28" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 21 L7.5 16 L10.8 24.5 L13.6 23.4 L10.4 14.9 L18 14.9 Z"
+              fill="#1f1f24" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="caption">
+      <span class="step s1">① Find the purple Polish button</span>
+      <span class="step s2">② Drag it up to the bookmarks bar</span>
+      <span class="step s3">③ Done — click anytime to edit</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

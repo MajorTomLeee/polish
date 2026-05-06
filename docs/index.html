@@ -164,42 +164,54 @@
     background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='white'/><path d='M11 8h6c2.8 0 5 2.2 5 5s-2.2 5-5 5h-3v6h-3V8zm3 7h3c1.1 0 2-.9 2-2s-.9-2-2-2h-3v4z' fill='%235b5bd6'/></svg>") center/contain no-repeat;
   }
 
-  /* drag guide */
-  .drag-guide {
-    display: inline-flex; align-items: center; gap: 10px;
-    color: var(--fg-muted); font-size: 13.5px;
-    padding: 6px 4px;
+  /* upward arrow above the bookmarklet — hints "drag UP to your bookmarks bar" */
+  .bookmarklet-wrap {
+    position: relative; display: inline-block;
+    transform: translate(0px, 25px);
   }
-  .drag-guide-arrow {
-    display: inline-block; width: 56px; height: 14px;
-    position: relative;
-    animation: drag-arrow-bounce 1.4s ease-in-out infinite;
+  .bookmark-arrow {
+    position: absolute; left: 50%; top: -44px;
+    width: 26px; height: 32px;
+    color: var(--accent);
+    animation: bookmark-arrow-bob 1.4s ease-in-out infinite;
+    pointer-events: none;
   }
-  .drag-guide-arrow::before {
-    content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-    width: 100%; height: 2px; background: var(--accent); border-radius: 1px;
+  @keyframes bookmark-arrow-bob {
+    0%, 100% { transform: translate(-50%, 0); opacity: .8; }
+    50%      { transform: translate(-50%, -10px); opacity: 1; }
   }
-  .drag-guide-arrow::after {
-    content: ""; position: absolute; right: -1px; top: 50%;
-    width: 8px; height: 8px;
-    border-top: 2px solid var(--accent); border-right: 2px solid var(--accent);
-    transform: translateY(-50%) rotate(45deg);
+  /* hint line under the bookmarklet */
+  .drag-hint {
+    margin: 18px auto 0;
+    color: var(--fg-muted); font-size: 14px; text-align: center;
+    transform: translate(0px, 41px);
   }
-  @keyframes drag-arrow-bounce {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(8px); }
+  .drag-hint strong { color: var(--fg); }
+  /* "How it works" section title above the demo gif */
+  .hero-howto-title {
+    margin: 64px auto 16px;
+    text-align: center;
+    font-size: 42px; font-weight: 700; letter-spacing: -0.01em;
+    color: var(--fg);
+    transform: translate(4px, 455.5px);
   }
-
   .drag-illustration {
-    margin: 24px auto 0; max-width: 540px;
-    background: var(--bg-muted); border: 1px dashed var(--border);
-    border-radius: 12px; padding: 16px 20px;
-    display: flex; align-items: center; gap: 14px;
-    color: var(--fg-muted); font-size: 13.5px;
-    text-align: left;
+    margin: 0 auto; max-width: 720px;
+    display: flex; flex-direction: column; align-items: stretch;
+    gap: 12px;
   }
-  .drag-illustration svg { flex-shrink: 0; }
-  .drag-illustration strong { color: var(--fg); }
+  .drag-demo {
+    display: block; width: 100%; height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(20, 24, 60, .10);
+    border: 1px solid var(--border);
+    transform: translate(-1.4px, -58px);
+  }
+  /* secondary CTA row below the how-it-works demo */
+  .demo-cta {
+    margin: 28px auto 0; text-align: center;
+    transform: translate(0px, 34px);
+  }
 
   /* hero visual */
   .hero-visual {
@@ -350,22 +362,25 @@
   <h1 data-i18n-html="hero_title">The last mile of<br><em>vibe coding</em></h1>
   <p data-i18n="hero_sub">Make any AI-generated page editable in the browser. Anyone — designers, PMs, anyone without local code — drags, recolors, retypes, and exports an AI-ready diff back to Cursor / Claude / your dev.</p>
   <div class="cta-row">
-    <a class="bookmarklet" id="bookmarklet" draggable="true"
-       href="javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();">Polish</a>
-    <span class="drag-guide">
-      <span class="drag-guide-arrow"></span>
-      <span data-i18n-html="cta_drag_hint">drag this button to your <strong>bookmarks bar</strong></span>
+    <span class="bookmarklet-wrap">
+      <svg class="bookmark-arrow" viewBox="0 0 26 32" fill="none" aria-hidden="true">
+        <path d="M13 30 V4 M4 13 L13 4 L22 13"
+              stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <a class="bookmarklet" id="bookmarklet" draggable="true"
+         href="javascript:(function(){if(window.__POLISH__){return}var s=document.createElement('script');s.src='https://polish.bowie.top/polish.js?b='+Date.now();window.__POLISH_FORCE__=true;document.body.appendChild(s)})();">Polish</a>
     </span>
-    <a class="btn btn-secondary" href="/demo/" target="_blank" data-i18n="cta_demo">Try the live demo →</a>
   </div>
+  <p class="drag-hint" data-i18n-html="cta_drag_hint">drag this button to your <strong>bookmarks bar</strong></p>
+
+  <h2 class="hero-howto-title" data-i18n="hero_howto">How it works</h2>
   <div class="drag-illustration">
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-      <rect x="2" y="2" width="36" height="8" rx="2" fill="currentColor" opacity=".15"/>
-      <rect x="2" y="14" width="36" height="24" rx="3" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="3 3"/>
-      <circle cx="20" cy="26" r="6" fill="currentColor" opacity=".4"/>
-      <path d="M20 20 V32 M14 26 H26" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-    <span data-i18n-html="cta_drag_illus">If you don't see your bookmarks bar, press <strong>⌘+⇧+B</strong> (Windows: <strong>Ctrl+Shift+B</strong>) first. Then drag the purple <strong>Polish</strong> button up onto it.</span>
+    <img class="drag-demo" src="drag-to-bookmark.gif" width="720" height="405"
+         alt="Demo: drag the purple Polish button to the bookmarks bar" loading="eager">
+  </div>
+  <div class="demo-cta">
+    <a class="btn btn-secondary" href="/demo/" target="_blank" data-i18n="cta_demo">Try the live demo →</a>
   </div>
   <div class="hero-visual">
     <img src="polish-demo.gif" alt="Polish demo: drag → restyle → export AI-ready markdown" loading="eager">
@@ -523,6 +538,7 @@ import 'polish';</pre>
       cta_drag_hint: 'drag this button to your <strong>bookmarks bar</strong>',
       cta_drag_illus: "If you don't see your bookmarks bar, press <strong>⌘+⇧+B</strong> (Windows: <strong>Ctrl+Shift+B</strong>) first. Then drag the purple <strong>Polish</strong> button up onto it.",
       cta_demo: 'Try the live demo →',
+      hero_howto: 'How it works',
 
       problem_h: "This shouldn't keep happening",
       problem_lead: "AI shipped your page. It's almost right — but not right. Then the back-and-forth begins.",
@@ -580,6 +596,7 @@ import 'polish';</pre>
       cta_drag_hint: '把这颗按钮拖到<strong>书签栏</strong>',
       cta_drag_illus: '如果看不到书签栏，先按 <strong>⌘+⇧+B</strong>（Windows：<strong>Ctrl+Shift+B</strong>）显示书签栏。然后把紫色的 <strong>Polish</strong> 按钮拖到上面就好。',
       cta_demo: '在 Demo 页玩一下 →',
+      hero_howto: '效果展示',
 
       problem_h: '这不该再发生',
       problem_lead: 'AI 帮你把页面写出来了。它差不多对，但不够对 —— 然后开始扯皮。',
@@ -740,6 +757,17 @@ import 'polish';</pre>
       a.download = 'polish-bookmark.html';
       a.click();
     });
+  }
+</script>
+
+<!-- dev only: ?polish-dev=1 + localhost loads polish.js from /src (gated so prod can't trigger) -->
+<script>
+  if ((location.hostname === '127.0.0.1' || location.hostname === 'localhost') &&
+      new URLSearchParams(location.search).has('polish-dev') && !window.__POLISH__) {
+    window.__POLISH_FORCE__ = true;
+    var s = document.createElement('script');
+    s.src = '../src/polish.js?b=' + Date.now();
+    document.body.appendChild(s);
   }
 </script>
 </body>
