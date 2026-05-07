@@ -2,14 +2,27 @@
 
 # Polish
 
-**Vibe coding 的最后一站**
+**The last mile of vibe coding**
 
-让 AI 生成的页面，在浏览器里被任何人改到位。<br/>
-导出 AI-native 改动包，直接喂给 Cursor / Claude / 研发同事。
+Make any AI-generated page editable in the browser.<br/>
+Designers, PMs, anyone without local code — drag, recolor, retype, and export an AI-ready diff back to Cursor / Claude / your dev.
 
-[官网与 Demo](https://polish.bowie.top) · [Bookmarklet 安装](https://polish.bowie.top#install) · [一行接入](https://polish.bowie.top#install)
+[**Live demo →**](https://polish.bowie.top) · [Install bookmarklet](https://polish.bowie.top#install) · [One-line script](https://polish.bowie.top#install)
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Live](https://img.shields.io/badge/demo-polish.bowie.top-5b5bd6)](https://polish.bowie.top)
+![Zero dependencies](https://img.shields.io/badge/deps-0-success)
+![Single file](https://img.shields.io/badge/single--file-✓-success)
+
+<img src="docs/polish-demo.gif" alt="Polish demo: drag → restyle → export AI-ready markdown" width="780">
 
 </div>
+
+---
+
+## 中文版 / Chinese
+
+**Vibe coding 的最后一站** — 让 AI 生成的页面在浏览器里被任何人改到位，导出 AI-native 改动包给 Cursor / Claude / 研发同事。完整中文文档见下方各章节，本 README 双语并存。
 
 ---
 
